@@ -1,4 +1,4 @@
-.PHONY: help install-db-api install-chat run-db-api run-chat load-synthetic generate-synthetic
+.PHONY: help install-db-api install-chat run-db-api run-chat load-synthetic generate-synthetic aws-login tf-login
 
 # Default target
 help:
@@ -28,6 +28,11 @@ help:
 	@echo "  make deploy-db-api       - Deploy db-api service"
 	@echo "  make deploy-chat         - Deploy chat service"
 	@echo "  make deploy-all          - Deploy all services"
+
+ifneq (,$(wildcard .env))
+include .env
+export  # export included vars to child processes
+endif
 
 # Development targets
 install-db-api:
@@ -68,6 +73,25 @@ docker-push-chat:
 	@echo "Docker push for chat not yet implemented"
 
 # Infrastructure targets (to be implemented)
+# Login
+# This goal is used to make sure your local CLI session is authenticated
+# with AWS via SSO before running Terraform or other AWS CLI commands.
+# `aws sts get-caller-identity` is a diagnostic command — it prints
+# the current authenticated AWS account ID, user ARN, and user ID.
+# If this succeeds, Terraform will also have valid credentials.
+aws-login:
+#	@echo ">>> Logging in with AWS SSO for profile: $(DEPLOY_AWS_PROFILE)"
+#	AWS_PROFILE=$(DEPLOY_AWS_PROFILE) AWS_REGION=$(DEPLOY_AWS_REGION) AWS_SDK_LOAD_CONFIG=1 \
+#		aws sso login
+	@echo ">>> Verifying AWS identity..."
+	AWS_PROFILE=$(DEPLOY_AWS_PROFILE) AWS_REGION=$(DEPLOY_AWS_REGION) AWS_SDK_LOAD_CONFIG=1 \
+		aws sso login --profile $(DEPLOY_AWS_PROFILE)
+	AWS_PROFILE=$(DEPLOY_AWS_PROFILE) AWS_REGION=$(DEPLOY_AWS_REGION) AWS_SDK_LOAD_CONFIG=1 \
+		aws sts get-caller-identity  --profile $(DEPLOY_AWS_PROFILE)
+	@echo "✅ Login complete — credentials are valid."
+
+tf-login: aws-login
+
 tf-init:
 	@echo "Terraform init not yet implemented"
 

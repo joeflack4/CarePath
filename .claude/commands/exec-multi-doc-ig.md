@@ -28,6 +28,21 @@ Complete evecrything in order.
 When you complete a subsection or section, check off all of the tasks that you completed. If you didn't complete any due
 to some difficulty, or feedback needed, you must prompt the user. 
 
+When you complete these tasks, make sure not to mark off a higher level task unless all of its lower level tasks have 
+first been completed and checked off.
+
+Wrong:
+```md
+- [x] Implement `make install-chat`:
+    - [ ] Install required packages (fastapi, uvicorn, httpx, pydantic-settings, pinecone-client, etc.)
+```
+
+Correct:
+```md
+- [x] Implement `make install-chat`:
+    - [x] Install required packages (fastapi, uvicorn, httpx, pydantic-settings, pinecone-client, etc.)
+```
+
 One you complete one of the phase documents, go back to `1-main.md`, and check off the apporpriate summary tasks as 
 applicable, if the document you completed fully takes care of the task. If it looks like there is still more work to do 
 for the given phase document, let the user know.

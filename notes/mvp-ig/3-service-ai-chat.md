@@ -47,9 +47,9 @@ This service exposes an AI-powered `/triage` endpoint that:
 
 - [x] Implement function:
 
-  - [ ] `def scrub(request_body: dict) -> dict:`
-    - [ ] For MVP, return input unchanged
-    - [ ] Add TODO comment for real PHI removal logic
+  - [x] `def scrub(request_body: dict) -> dict:`
+    - [x] For MVP, return input unchanged
+    - [x] Add TODO comment for real PHI removal logic
 
 - [x] Ensure `/triage` calls `scrub()` before logging any request body.
 
@@ -58,18 +58,18 @@ This service exposes an AI-powered `/triage` endpoint that:
 ## 4. Tracing Helper (tracing.py)
 
 - [x] Implement:
-  - [ ] `start_trace() -> str` (returns UUID4 string)
-  - [ ] `log_span(trace_id: str, span_name: str, **kwargs)`
+  - [x] `start_trace() -> str` (returns UUID4 string)
+  - [x] `log_span(trace_id: str, span_name: str, **kwargs)`
 
 - [x] For MVP, log JSON-ish lines containing:
-  - [ ] `trace_id`
-  - [ ] `span_name`
-  - [ ] Extra metadata (e.g., elapsed_ms, endpoint)
+  - [x] `trace_id`
+  - [x] `span_name`
+  - [x] Extra metadata (e.g., elapsed_ms, endpoint)
 
 - [x] Use spans for key points:
-  - [ ] `request_received`
-  - [ ] `db_api_patient_summary_start` / `end`
-  - [ ] `llm_inference_start` / `end`
+  - [x] `request_received`
+  - [x] `db_api_patient_summary_start` / `end`
+  - [x] `llm_inference_start` / `end`
 
 ---
 
@@ -77,9 +77,9 @@ This service exposes an AI-powered `/triage` endpoint that:
 
 - [x] Use `httpx` or `requests` for HTTP calls
 - [x] Implement `get_patient_summary(mrn: str) -> dict`:
-  - [ ] Build URL: `{DB_API_BASE_URL}/patients/{mrn}/summary`
-  - [ ] Handle 404 and other errors
-  - [ ] Return parsed JSON as dict
+  - [x] Build URL: `{DB_API_BASE_URL}/patients/{mrn}/summary`
+  - [x] Handle 404 and other errors
+  - [x] Return parsed JSON as dict
 
 - [x] Ensure any errors raise domain-specific exceptions for the router to catch.
 
@@ -91,14 +91,14 @@ This service exposes an AI-powered `/triage` endpoint that:
 
 - [x] Implement function:
 
-  - [ ] `def generate_response_mock(query: str, patient_summary: dict) -> str:`
-    - [ ] Return fixed string like `"mock response"`
+  - [x] `def generate_response_mock(query: str, patient_summary: dict) -> str:`
+    - [x] Return fixed string like `"mock response"`
 
 - [x] Implement dispatcher:
 
-  - [ ] `def generate_response(mode: str, query: str, patient_summary: dict) -> str:`
-    - [ ] If `mode == "mock"` → use `generate_response_mock`
-    - [ ] If `mode == "qwen"` → call future real model implementation
+  - [x] `def generate_response(mode: str, query: str, patient_summary: dict) -> str:`
+    - [x] If `mode == "mock"` → use `generate_response_mock`
+    - [x] If `mode == "qwen"` → call future real model implementation
 
 ### 6.2 Qwen3-4B-Thinking-2507 (Post-deploy)
 
@@ -111,22 +111,22 @@ This service exposes an AI-powered `/triage` endpoint that:
 
 - [x] Import real SDK:
 
-  - [ ] `from pinecone import Pinecone`
+  - [x] `from pinecone import Pinecone` (commented out, scaffold only)
 
 - [x] Implement:
 
-  - [ ] `def get_index() -> Any:`
-    - [ ] Initialize `Pinecone` client with `PINECONE_API_KEY`
-    - [ ] Return `pc.Index(PINECONE_INDEX_NAME)`
+  - [x] `def get_index() -> Any:` (scaffold with NotImplementedError)
+    - [ ] Initialize `Pinecone` client with `PINECONE_API_KEY` (future work)
+    - [ ] Return `pc.Index(PINECONE_INDEX_NAME)` (future work)
 
-  - [ ] `def query_embeddings(query_vector, top_k=5, filter=None) -> dict:`
-    - [ ] Call `index.query(vector=query_vector, top_k=top_k, filter=filter)`
-    - [ ] Return response
+  - [x] `def query_embeddings(query_vector, top_k=5, filter=None) -> dict:` (scaffold with NotImplementedError)
+    - [ ] Call `index.query(vector=query_vector, top_k=top_k, filter=filter)` (future work)
+    - [ ] Return response (future work)
 
 - [x] For MVP:
-  - [ ] Leave `VECTOR_MODE="mock"`
-  - [ ] Do not call Pinecone from `/triage` yet
-  - [ ] Document how this will be used in `5-post-deploy-improvements.md`
+  - [x] Leave `VECTOR_MODE="mock"`
+  - [x] Do not call Pinecone from `/triage` yet
+  - [x] Document how this will be used in `5-post-deploy-improvements.md`
 
 ---
 
@@ -134,15 +134,15 @@ This service exposes an AI-powered `/triage` endpoint that:
 
 - [x] Implement function:
 
-  - [ ] `def build_prompt(query: str, patient_summary: dict) -> str:`
-    - [ ] Format a simple text prompt:
-      - [ ] Short system-style instructions
-      - [ ] Patient summary block
-      - [ ] User’s query
+  - [x] `def build_prompt(query: str, patient_summary: dict) -> str:`
+    - [x] Format a simple text prompt:
+      - [x] Short system-style instructions
+      - [x] Patient summary block
+      - [x] User's query
 
 - [x] For MVP:
-  - [ ] Do not call Pinecone here
-  - [ ] Only use patient summary from `service_db_api`
+  - [x] Do not call Pinecone here
+  - [x] Only use patient summary from `service_db_api`
 
 - [x] Ensure this is the only place combining patient data and query into a prompt string.
 
@@ -151,45 +151,45 @@ This service exposes an AI-powered `/triage` endpoint that:
 ## 9. Triage Router (routers/triage.py)
 
 - [x] Define request model:
-  - [ ] Fields: `patient_mrn: str`, `query: str`
+  - [x] Fields: `patient_mrn: str`, `query: str`
 
 - [x] `POST /triage`
-  - [ ] Start trace ID
-  - [ ] Run `scrub(request_body)` before logging
-  - [ ] Log `request_received` span
-  - [ ] Call `db_client.get_patient_summary(mrn)` with spans for start/end
-  - [ ] Build prompt via `rag_service.build_prompt`
-  - [ ] Call `llm_client.generate_response(LLM_MODE, query, patient_summary)`
-  - [ ] Log `llm_inference` spans
-  - [ ] Return JSON:
-    - [ ] `trace_id`
-    - [ ] `patient_mrn`
-    - [ ] `query`
-    - [ ] `llm_mode`
-    - [ ] `response`
+  - [x] Start trace ID
+  - [x] Run `scrub(request_body)` before logging
+  - [x] Log `request_received` span
+  - [x] Call `db_client.get_patient_summary(mrn)` with spans for start/end
+  - [x] Build prompt via `rag_service.build_prompt`
+  - [x] Call `llm_client.generate_response(LLM_MODE, query, patient_summary)`
+  - [x] Log `llm_inference` spans
+  - [x] Return JSON:
+    - [x] `trace_id`
+    - [x] `patient_mrn`
+    - [x] `query`
+    - [x] `llm_mode`
+    - [x] `response`
 
 - [x] Error handling:
-  - [ ] If patient not found → 404 with `trace_id`
-  - [ ] For other errors, log trace_id and return 500 with generic message
+  - [x] If patient not found → 404 with `trace_id`
+  - [x] For other errors, log trace_id and return 500 with generic message
 
 ---
 
 ## 10. Health Router (routers/health.py)
 
 - [x] `GET /health`
-  - [ ] Return `{ "status": "ok", "service": "chat-api", "version": "0.1.0" }`
+  - [x] Return `{ "status": "ok", "service": "chat-api", "version": "0.1.0" }`
 
 ---
 
 ## 11. service_chat/main.py
 
 - [x] Initialize FastAPI app:
-  - [ ] Title: “CarePath Chat API”
-  - [ ] Version: “0.1.0`
+  - [x] Title: "CarePath Chat API"
+  - [x] Version: "0.1.0`
 
 - [x] Include routers:
-  - [ ] `/health`
-  - [ ] `/triage`
+  - [x] `/health`
+  - [x] `/triage`
 
 - [x] Configure logging to include trace IDs if possible
 - [x] Add CORS for dev
@@ -200,12 +200,12 @@ This service exposes an AI-powered `/triage` endpoint that:
 ## 12. Dev Usage
 
 - [x] Implement `make install-chat`:
-  - [ ] Install required packages (fastapi, uvicorn, httpx, pydantic-settings, pinecone-client, etc.)
+  - [x] Install required packages (fastapi, uvicorn, httpx, pydantic-settings, pinecone-client, etc.)
 
 - [x] Implement `make run-chat`:
-  - [ ] Command like: `uvicorn service_chat.main:app --reload --port 8002`
+  - [x] Command like: `uvicorn service_chat.main:app --reload --port 8002`
 
-- [x] Manual test:
+- [ ] Manual test (for user to complete):
   - [ ] Ensure `service_db_api` is running locally
   - [ ] `POST http://localhost:8002/triage` with body:
     ```json

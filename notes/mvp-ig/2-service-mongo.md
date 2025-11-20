@@ -3,13 +3,13 @@
 This file defines the FastAPI microservice that exposes healthcare-like data from MongoDB. It drives both the standalone demo and the RAG context for `service_chat`.
 
 Refer explicitly to **`data-snippets.md`** for sample document shapes:
-- [ ] patients
-- [ ] encounters
-- [ ] claims
-- [ ] documents
-- [ ] chat_logs
-- [ ] providers (optional)
-- [ ] audit_logs (optional)
+- [x] patients
+- [x] encounters
+- [x] claims
+- [x] documents
+- [x] chat_logs
+- [x] providers (optional)
+- [x] audit_logs (optional)
 
 ---
 

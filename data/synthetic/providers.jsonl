@@ -1,0 +1,1 @@
+{"_id": {"$oid": "675000000000000000000050"}, "provider_id": "PROV-1001", "npi": "1234567890", "name": {"first": "Jordan", "last": "Patel"}, "specialty": "Internal Medicine", "location": "Raleigh Primary Care Clinic"}

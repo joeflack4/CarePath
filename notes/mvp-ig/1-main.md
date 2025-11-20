@@ -49,26 +49,26 @@ The following docs have been created as a single multi-doc implementation guide.
 
 ## 4. Implementation Order
 
-- [ ] Phase 1 – Bootstrap repo and environment
-  - [ ] Create repo structure and top-level README
-  - [ ] Create `service_db_api/` and `service_chat/` directories
-  - [ ] Add root `Makefile` skeleton
-  - [ ] Add `.env.example` files for both services
+- [x] Phase 1 – Bootstrap repo and environment
+  - [x] Create repo structure and top-level README
+  - [x] Create `service_db_api/` and `service_chat/` directories
+  - [x] Add root `Makefile` skeleton
+  - [x] Add `.env.example` files for both services
 
-- [ ] Phase 2 – Implement `service_db_api` (Mongo API)
-  - [ ] Implement Mongo client and models
-  - [ ] Implement core routers (patients, encounters, claims, documents)
-  - [ ] Implement synthetic data scripts
-  - [ ] Verify `/health` and `/patients` endpoints
-  - [ ] Verify `/patients/{mrn}/summary` endpoint
+- [x] Phase 2 – Implement `service_db_api` (Mongo API)
+  - [x] Implement Mongo client and models
+  - [x] Implement core routers (patients, encounters, claims, documents)
+  - [x] Implement synthetic data scripts
+  - [ ] Verify `/health` and `/patients` endpoints (requires MongoDB)
+  - [ ] Verify `/patients/{mrn}/summary` endpoint (requires MongoDB)
 
-- [ ] Phase 3 – Implement `service_chat` (AI service)
-  - [ ] Implement FastAPI skeleton with `/triage` and `/health`
-  - [ ] Implement HTTP client to `service_db_api`
-  - [ ] Implement mock LLM
-  - [ ] Implement PHI scrub placeholder
-  - [ ] Implement simple tracing
-  - [ ] Verify `/triage` uses patient summary and mock LLM
+- [x] Phase 3 – Implement `service_chat` (AI service)
+  - [x] Implement FastAPI skeleton with `/triage` and `/health`
+  - [x] Implement HTTP client to `service_db_api`
+  - [x] Implement mock LLM
+  - [x] Implement PHI scrub placeholder
+  - [x] Implement simple tracing
+  - [ ] Verify `/triage` uses patient summary and mock LLM (requires both services running)
 
 - [ ] Phase 4 – Docker + Terraform (infra)
   - [ ] Create Dockerfiles for both services

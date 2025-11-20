@@ -1,72 +1,72 @@
 # service_chat Spec (AI Chat + RAG + Tracing + PHI Scrub)
 
 This service exposes an AI-powered `/triage` endpoint that:
-- [ ] Receives a query and patient MRN
-- [ ] Calls `service_db_api` for patient summary (RAG-lite)
-- [ ] Passes combined info into an LLM interface
-- [ ] Uses mock LLM and mock vector store in MVP
-- [ ] Provides scaffolding for Pinecone and real model in later phases
+- [x] Receives a query and patient MRN
+- [x] Calls `service_db_api` for patient summary (RAG-lite)
+- [x] Passes combined info into an LLM interface
+- [x] Uses mock LLM and mock vector store in MVP
+- [x] Provides scaffolding for Pinecone and real model in later phases
 
 ---
 
 ## 1. Directory Layout
 
-- [ ] Create `service_chat/`:
-  - [ ] `main.py`
-  - [ ] `config.py`
-  - [ ] `routers/`
-    - [ ] `triage.py`
-    - [ ] `health.py`
-  - [ ] `services/`
-    - [ ] `db_client.py`         (HTTP client to `service_db_api`)
-    - [ ] `llm_client.py`        (mock + future Qwen)
-    - [ ] `rag_service.py`       (RAG orchestration)
-    - [ ] `pinecone_client.py`   (real Pinecone SDK integration, not wired in MVP)
-  - [ ] `tracing.py`             (simple trace helper)
-  - [ ] `scrub_phi.py`           (PHI scrub placeholder)
-  - [ ] `__init__.py`
+- [x] Create `service_chat/`:
+  - [x] `main.py`
+  - [x] `config.py`
+  - [x] `routers/`
+    - [x] `triage.py`
+    - [x] `health.py`
+  - [x] `services/`
+    - [x] `db_client.py`         (HTTP client to `service_db_api`)
+    - [x] `llm_client.py`        (mock + future Qwen)
+    - [x] `rag_service.py`       (RAG orchestration)
+    - [x] `pinecone_client.py`   (real Pinecone SDK integration, not wired in MVP)
+  - [x] `tracing.py`             (simple trace helper)
+  - [x] `scrub_phi.py`           (PHI scrub placeholder)
+  - [x] `__init__.py`
 
 ---
 
 ## 2. Configuration (config.py)
 
-- [ ] Use `pydantic-settings` with fields:
-  - [ ] `CHAT_API_PORT` (e.g. 8002)
-  - [ ] `DB_API_BASE_URL` (e.g. `http://localhost:8001`)
-  - [ ] `LLM_MODE` (default `"mock"`)
-  - [ ] `VECTOR_MODE` (default `"mock"`)
-  - [ ] `PINECONE_API_KEY` (for future use)
-  - [ ] `PINECONE_ENVIRONMENT`
-  - [ ] `PINECONE_INDEX_NAME`
+- [x] Use `pydantic-settings` with fields:
+  - [x] `CHAT_API_PORT` (e.g. 8002)
+  - [x] `DB_API_BASE_URL` (e.g. `http://localhost:8001`)
+  - [x] `LLM_MODE` (default `"mock"`)
+  - [x] `VECTOR_MODE` (default `"mock"`)
+  - [x] `PINECONE_API_KEY` (for future use)
+  - [x] `PINECONE_ENVIRONMENT`
+  - [x] `PINECONE_INDEX_NAME`
 
-- [ ] Add these env vars to `.env.example`.
+- [x] Add these env vars to `.env.example`.
 
 ---
 
 ## 3. PHI Scrub Placeholder (scrub_phi.py)
 
-- [ ] Implement function:
+- [x] Implement function:
 
   - [ ] `def scrub(request_body: dict) -> dict:`
     - [ ] For MVP, return input unchanged
     - [ ] Add TODO comment for real PHI removal logic
 
-- [ ] Ensure `/triage` calls `scrub()` before logging any request body.
+- [x] Ensure `/triage` calls `scrub()` before logging any request body.
 
 ---
 
 ## 4. Tracing Helper (tracing.py)
 
-- [ ] Implement:
+- [x] Implement:
   - [ ] `start_trace() -> str` (returns UUID4 string)
   - [ ] `log_span(trace_id: str, span_name: str, **kwargs)`
 
-- [ ] For MVP, log JSON-ish lines containing:
+- [x] For MVP, log JSON-ish lines containing:
   - [ ] `trace_id`
   - [ ] `span_name`
   - [ ] Extra metadata (e.g., elapsed_ms, endpoint)
 
-- [ ] Use spans for key points:
+- [x] Use spans for key points:
   - [ ] `request_received`
   - [ ] `db_api_patient_summary_start` / `end`
   - [ ] `llm_inference_start` / `end`
@@ -75,13 +75,13 @@ This service exposes an AI-powered `/triage` endpoint that:
 
 ## 5. DB API Client (services/db_client.py)
 
-- [ ] Use `httpx` or `requests` for HTTP calls
-- [ ] Implement `get_patient_summary(mrn: str) -> dict`:
+- [x] Use `httpx` or `requests` for HTTP calls
+- [x] Implement `get_patient_summary(mrn: str) -> dict`:
   - [ ] Build URL: `{DB_API_BASE_URL}/patients/{mrn}/summary`
   - [ ] Handle 404 and other errors
   - [ ] Return parsed JSON as dict
 
-- [ ] Ensure any errors raise domain-specific exceptions for the router to catch.
+- [x] Ensure any errors raise domain-specific exceptions for the router to catch.
 
 ---
 
@@ -89,12 +89,12 @@ This service exposes an AI-powered `/triage` endpoint that:
 
 ### 6.1 Mock LLM (MVP)
 
-- [ ] Implement function:
+- [x] Implement function:
 
   - [ ] `def generate_response_mock(query: str, patient_summary: dict) -> str:`
     - [ ] Return fixed string like `"mock response"`
 
-- [ ] Implement dispatcher:
+- [x] Implement dispatcher:
 
   - [ ] `def generate_response(mode: str, query: str, patient_summary: dict) -> str:`
     - [ ] If `mode == "mock"` → use `generate_response_mock`
@@ -102,18 +102,18 @@ This service exposes an AI-powered `/triage` endpoint that:
 
 ### 6.2 Qwen3-4B-Thinking-2507 (Post-deploy)
 
-- [ ] Add placeholder for CPU-based loading of Hugging Face model
-- [ ] Keep actual heavy logic specified in `5-post-deploy-improvements.md`
+- [x] Add placeholder for CPU-based loading of Hugging Face model
+- [x] Keep actual heavy logic specified in `5-post-deploy-improvements.md`
 
 ---
 
 ## 7. Pinecone Client (services/pinecone_client.py)
 
-- [ ] Import real SDK:
+- [x] Import real SDK:
 
   - [ ] `from pinecone import Pinecone`
 
-- [ ] Implement:
+- [x] Implement:
 
   - [ ] `def get_index() -> Any:`
     - [ ] Initialize `Pinecone` client with `PINECONE_API_KEY`
@@ -123,7 +123,7 @@ This service exposes an AI-powered `/triage` endpoint that:
     - [ ] Call `index.query(vector=query_vector, top_k=top_k, filter=filter)`
     - [ ] Return response
 
-- [ ] For MVP:
+- [x] For MVP:
   - [ ] Leave `VECTOR_MODE="mock"`
   - [ ] Do not call Pinecone from `/triage` yet
   - [ ] Document how this will be used in `5-post-deploy-improvements.md`
@@ -132,7 +132,7 @@ This service exposes an AI-powered `/triage` endpoint that:
 
 ## 8. RAG Service (services/rag_service.py)
 
-- [ ] Implement function:
+- [x] Implement function:
 
   - [ ] `def build_prompt(query: str, patient_summary: dict) -> str:`
     - [ ] Format a simple text prompt:
@@ -140,20 +140,20 @@ This service exposes an AI-powered `/triage` endpoint that:
       - [ ] Patient summary block
       - [ ] User’s query
 
-- [ ] For MVP:
+- [x] For MVP:
   - [ ] Do not call Pinecone here
   - [ ] Only use patient summary from `service_db_api`
 
-- [ ] Ensure this is the only place combining patient data and query into a prompt string.
+- [x] Ensure this is the only place combining patient data and query into a prompt string.
 
 ---
 
 ## 9. Triage Router (routers/triage.py)
 
-- [ ] Define request model:
+- [x] Define request model:
   - [ ] Fields: `patient_mrn: str`, `query: str`
 
-- [ ] `POST /triage`
+- [x] `POST /triage`
   - [ ] Start trace ID
   - [ ] Run `scrub(request_body)` before logging
   - [ ] Log `request_received` span
@@ -168,7 +168,7 @@ This service exposes an AI-powered `/triage` endpoint that:
     - [ ] `llm_mode`
     - [ ] `response`
 
-- [ ] Error handling:
+- [x] Error handling:
   - [ ] If patient not found → 404 with `trace_id`
   - [ ] For other errors, log trace_id and return 500 with generic message
 
@@ -176,36 +176,36 @@ This service exposes an AI-powered `/triage` endpoint that:
 
 ## 10. Health Router (routers/health.py)
 
-- [ ] `GET /health`
+- [x] `GET /health`
   - [ ] Return `{ "status": "ok", "service": "chat-api", "version": "0.1.0" }`
 
 ---
 
 ## 11. service_chat/main.py
 
-- [ ] Initialize FastAPI app:
+- [x] Initialize FastAPI app:
   - [ ] Title: “CarePath Chat API”
   - [ ] Version: “0.1.0`
 
-- [ ] Include routers:
+- [x] Include routers:
   - [ ] `/health`
   - [ ] `/triage`
 
-- [ ] Configure logging to include trace IDs if possible
-- [ ] Add CORS for dev
-- [ ] Expose app for uvicorn (`service_chat.main:app`)
+- [x] Configure logging to include trace IDs if possible
+- [x] Add CORS for dev
+- [x] Expose app for uvicorn (`service_chat.main:app`)
 
 ---
 
 ## 12. Dev Usage
 
-- [ ] Implement `make install-chat`:
+- [x] Implement `make install-chat`:
   - [ ] Install required packages (fastapi, uvicorn, httpx, pydantic-settings, pinecone-client, etc.)
 
-- [ ] Implement `make run-chat`:
+- [x] Implement `make run-chat`:
   - [ ] Command like: `uvicorn service_chat.main:app --reload --port 8002`
 
-- [ ] Manual test:
+- [x] Manual test:
   - [ ] Ensure `service_db_api` is running locally
   - [ ] `POST http://localhost:8002/triage` with body:
     ```json

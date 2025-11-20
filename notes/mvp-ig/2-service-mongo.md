@@ -15,80 +15,80 @@ Refer explicitly to **`data-snippets.md`** for sample document shapes:
 
 ## 1. Directory Layout
 
-- [ ] At repo root, create:
+- [x] At repo root, create:
 
-  - [ ] `service_db_api/`
-    - [ ] `main.py`
-    - [ ] `config.py`
-    - [ ] `db/`
-      - [ ] `mongo.py`
-    - [ ] `models/`
-      - [ ] `patient.py`
-      - [ ] `encounter.py`
-      - [ ] `claim.py`
-      - [ ] `document.py`
-      - [ ] `chat_log.py`
-      - [ ] `provider.py` (optional)
-      - [ ] `audit_log.py` (optional)
-    - [ ] `routers/`
-      - [ ] `health.py`
-      - [ ] `patients.py`
-      - [ ] `encounters.py`
-      - [ ] `claims.py`
-      - [ ] `documents.py`
-      - [ ] `chat_logs.py` (optional)
-    - [ ] `schemas/` (optional Pydantic DTOs)
-    - [ ] `__init__.py`
+  - [x] `service_db_api/`
+    - [x] `main.py`
+    - [x] `config.py`
+    - [x] `db/`
+      - [x] `mongo.py`
+    - [x] `models/`
+      - [x] `patient.py`
+      - [x] `encounter.py`
+      - [x] `claim.py`
+      - [x] `document.py`
+      - [x] `chat_log.py`
+      - [x] `provider.py` (optional)
+      - [x] `audit_log.py` (optional)
+    - [x] `routers/`
+      - [x] `health.py`
+      - [x] `patients.py`
+      - [x] `encounters.py`
+      - [x] `claims.py`
+      - [x] `documents.py`
+      - [x] `chat_logs.py` (optional)
+    - [x] `schemas/` (optional Pydantic DTOs)
+    - [x] `__init__.py`
 
-  - [ ] `scripts/`
-    - [ ] `generate_synthetic_data.py`
-    - [ ] `load_synthetic_data.py`
+  - [x] `scripts/`
+    - [x] `generate_synthetic_data.py`
+    - [x] `load_synthetic_data.py`
 
 ---
 
 ## 2. Configuration (config.py)
 
-- [ ] Use `pydantic-settings` for environment-based config:
-  - [ ] `MONGODB_URI`
-  - [ ] `MONGODB_DB_NAME`
-  - [ ] `API_PORT_DB_API` (e.g. 8001)
-  - [ ] `LOG_LEVEL`
+- [x] Use `pydantic-settings` for environment-based config:
+  - [x] `MONGODB_URI`
+  - [x] `MONGODB_DB_NAME`
+  - [x] `API_PORT_DB_API` (e.g. 8001)
+  - [x] `LOG_LEVEL`
 
-- [ ] Add these to root `.env.example`.
+- [x] Add these to root `.env.example`.
 
 ---
 
 ## 3. Mongo Client (db/mongo.py)
 
-- [ ] Implement `MongoConnection`:
-  - [ ] Holds client and database instances
-  - [ ] Lazily creates `AsyncIOMotorClient` or `MongoClient`
-  - [ ] Provides `get_database()` function
+- [x] Implement `MongoConnection`:
+  - [x] Holds client and database instances
+  - [x] Lazily creates `AsyncIOMotorClient` or `MongoClient`
+  - [x] Provides `get_database()` function
 
-- [ ] Implement a `ping()` helper:
-  - [ ] Issues `db.command("ping")`
-  - [ ] Returns success/failure + latency
+- [x] Implement a `ping()` helper:
+  - [x] Issues `db.command("ping")`
+  - [x] Returns success/failure + latency
 
-- [ ] Define collections using names from `data-snippets.md`:
-  - [ ] `patients`
-  - [ ] `encounters`
-  - [ ] `claims`
-  - [ ] `documents`
-  - [ ] `chat_logs`
-  - [ ] `providers`
-  - [ ] `audit_logs`
+- [x] Define collections using names from `data-snippets.md`:
+  - [x] `patients`
+  - [x] `encounters`
+  - [x] `claims`
+  - [x] `documents`
+  - [x] `chat_logs`
+  - [x] `providers`
+  - [x] `audit_logs`
 
-- [ ] Create indexes:
-  - [ ] `patients.mrn` (unique)
-  - [ ] `encounters.patient_mrn`
-  - [ ] `encounters.encounter_id` (unique)
-  - [ ] `claims.patient_mrn`
-  - [ ] `claims.claim_id` (unique)
-  - [ ] `documents.doc_id` (unique)
-  - [ ] `documents.patient_mrn`
-  - [ ] `chat_logs.conversation_id` (unique)
-  - [ ] `chat_logs.patient_mrn`
-  - [ ] Optional: provider_id, event_id, timestamps
+- [x] Create indexes:
+  - [x] `patients.mrn` (unique)
+  - [x] `encounters.patient_mrn`
+  - [x] `encounters.encounter_id` (unique)
+  - [x] `claims.patient_mrn`
+  - [x] `claims.claim_id` (unique)
+  - [x] `documents.doc_id` (unique)
+  - [x] `documents.patient_mrn`
+  - [x] `chat_logs.conversation_id` (unique)
+  - [x] `chat_logs.patient_mrn`
+  - [x] Optional: provider_id, event_id, timestamps
 
 ---
 
@@ -96,77 +96,77 @@ Refer explicitly to **`data-snippets.md`** for sample document shapes:
 
 ### 4.1 health.py
 
-- [ ] `GET /health`
-  - [ ] Return `{ status, service: "db-api", version }`
-- [ ] `GET /health/db`
-  - [ ] Call `db.command("ping")`
-  - [ ] Return DB connectivity status and latency
+- [x] `GET /health`
+  - [x] Return `{ status, service: "db-api", version }`
+- [x] `GET /health/db`
+  - [x] Call `db.command("ping")`
+  - [x] Return DB connectivity status and latency
 
 ### 4.2 patients.py
 
 Use **patients** document shape from `data-snippets.md`.
 
-- [ ] `GET /patients`
-  - [ ] Accept `skip` (int), `limit` (int)
-  - [ ] Return `{ items: [...patients], total: n }`
+- [x] `GET /patients`
+  - [x] Accept `skip` (int), `limit` (int)
+  - [x] Return `{ items: [...patients], total: n }`
 
-- [ ] `GET /patients/{mrn}`
-  - [ ] Return single patient or 404
+- [x] `GET /patients/{mrn}`
+  - [x] Return single patient or 404
 
-- [ ] `GET /patients/{mrn}/summary`
-  - [ ] Fetch patient base record from `patients`
-  - [ ] Fetch recent encounters from `encounters`
-  - [ ] Fetch recent claims from `claims`
-  - [ ] Fetch key documents from `documents` (e.g., care plan)
-  - [ ] Combine into a structured summary JSON
-  - [ ] Ensure this summary aligns with what `service_chat` needs for RAG
+- [x] `GET /patients/{mrn}/summary`
+  - [x] Fetch patient base record from `patients`
+  - [x] Fetch recent encounters from `encounters`
+  - [x] Fetch recent claims from `claims`
+  - [x] Fetch key documents from `documents` (e.g., care plan)
+  - [x] Combine into a structured summary JSON
+  - [x] Ensure this summary aligns with what `service_chat` needs for RAG
 
 ### 4.3 encounters.py
 
 Use **encounters** shape from `data-snippets.md`.
 
-- [ ] `GET /encounters`
-  - [ ] Accept `skip`, `limit`, `patient_mrn` (optional)
-  - [ ] Return encounters list with simple pagination
+- [x] `GET /encounters`
+  - [x] Accept `skip`, `limit`, `patient_mrn` (optional)
+  - [x] Return encounters list with simple pagination
 
-- [ ] `GET /encounters/{encounter_id}`
-  - [ ] Return encounter or 404
+- [x] `GET /encounters/{encounter_id}`
+  - [x] Return encounter or 404
 
-- [ ] `GET /patients/{mrn}/encounters`
-  - [ ] Return all encounters for patient, sorted by `start` descending
+- [x] `GET /patients/{mrn}/encounters`
+  - [x] Return all encounters for patient, sorted by `start` descending
 
 ### 4.4 claims.py
 
 Use **claims** shape from `data-snippets.md`.
 
-- [ ] `GET /claims`
-  - [ ] Accept `skip`, `limit`, `patient_mrn` (optional)
+- [x] `GET /claims`
+  - [x] Accept `skip`, `limit`, `patient_mrn` (optional)
 
-- [ ] `GET /claims/{claim_id}`
-  - [ ] Return claim or 404
+- [x] `GET /claims/{claim_id}`
+  - [x] Return claim or 404
 
 ### 4.5 documents.py
 
 Use **documents** shape from `data-snippets.md`.
 
-- [ ] `GET /documents`
-  - [ ] Accept `patient_mrn` (optional)
-  - [ ] Accept `source_type` (optional)
-  - [ ] Return filtered list
+- [x] `GET /documents`
+  - [x] Accept `patient_mrn` (optional)
+  - [x] Accept `source_type` (optional)
+  - [x] Return filtered list
 
-- [ ] `GET /documents/{doc_id}`
-  - [ ] Return document or 404
+- [x] `GET /documents/{doc_id}`
+  - [x] Return document or 404
 
-- [ ] Optional: `GET /patients/{mrn}/documents`
-  - [ ] Shortcut to all docs for patient
+- [x] Optional: `GET /patients/{mrn}/documents`
+  - [x] Shortcut to all docs for patient
 
 ### 4.6 chat_logs.py (optional for debugging)
 
 Use **chat_logs** shape from `data-snippets.md`.
 
-- [ ] `GET /chat-logs`
-  - [ ] Accept `patient_mrn` (optional)
-- [ ] `GET /chat-logs/{conversation_id}`
+- [x] `GET /chat-logs`
+  - [x] Accept `patient_mrn` (optional)
+- [x] `GET /chat-logs/{conversation_id}`
 
 ---
 
@@ -174,60 +174,60 @@ Use **chat_logs** shape from `data-snippets.md`.
 
 ### 5.1 generate_synthetic_data.py
 
-- [ ] Generate JSONL files with shapes matching `data-snippets.md`:
-  - [ ] `data/synthetic/patients.jsonl`
-  - [ ] `data/synthetic/encounters.jsonl`
-  - [ ] `data/synthetic/claims.jsonl`
-  - [ ] `data/synthetic/documents.jsonl`
-  - [ ] `data/synthetic/chat_logs.jsonl`
-  - [ ] (Optional) providers/audit_logs JSONL files
+- [x] Generate JSONL files with shapes matching `data-snippets.md`:
+  - [x] `data/synthetic/patients.jsonl`
+  - [x] `data/synthetic/encounters.jsonl`
+  - [x] `data/synthetic/claims.jsonl`
+  - [x] `data/synthetic/documents.jsonl`
+  - [x] `data/synthetic/chat_logs.jsonl`
+  - [x] (Optional) providers/audit_logs JSONL files
 
 For now, just use the same snippets in `data-snippets.md`, or something close to it. 1 record each for now is fine.
 
 ### 5.2 load_synthetic_data.py
 
-- [ ] Read each JSONL file from `data/synthetic/`
-- [ ] Connect to Mongo using `MONGODB_URI`
-- [ ] Optionally drop collections before insert
-- [ ] Bulk insert all documents
-- [ ] Ensure indexes are (re)created
+- [x] Read each JSONL file from `data/synthetic/`
+- [x] Connect to Mongo using `MONGODB_URI`
+- [x] Optionally drop collections before insert
+- [x] Bulk insert all documents
+- [x] Ensure indexes are (re)created
 
-- [ ] Add root Makefile target:
-  - [ ] `make load-synthetic` → `python scripts/load_synthetic_data.py`
+- [x] Add root Makefile target:
+  - [x] `make load-synthetic` → `python scripts/load_synthetic_data.py`
 
 ---
 
 ## 6. service_db_api/main.py
 
-- [ ] Create FastAPI app:
-  - [ ] Title: “CarePath DB API”
-  - [ ] Version: “0.1.0`
+- [x] Create FastAPI app:
+  - [x] Title: "CarePath DB API"
+  - [x] Version: "0.1.0`
 
-- [ ] Include routers:
-  - [ ] `/health`
-  - [ ] `/patients`
-  - [ ] `/encounters`
-  - [ ] `/claims`
-  - [ ] `/documents`
-  - [ ] `/chat-logs` (optional)
+- [x] Include routers:
+  - [x] `/health`
+  - [x] `/patients`
+  - [x] `/encounters`
+  - [x] `/claims`
+  - [x] `/documents`
+  - [x] `/chat-logs` (optional)
 
-- [ ] Add CORS middleware for development
-- [ ] On startup:
-  - [ ] Initialize Mongo connection, maybe `ping()` once
-- [ ] On shutdown:
-  - [ ] Close Mongo connection
+- [x] Add CORS middleware for development
+- [x] On startup:
+  - [x] Initialize Mongo connection, maybe `ping()` once
+- [x] On shutdown:
+  - [x] Close Mongo connection
 
 ---
 
 ## 7. Dev Usage
 
-- [ ] Implement `make install-db-api`:
-  - [ ] Install deps (fastapi, uvicorn, motor/pymongo, pydantic-settings)
+- [x] Implement `make install-db-api`:
+  - [x] Install deps (fastapi, uvicorn, motor/pymongo, pydantic-settings)
 
-- [ ] Implement `make run-db-api`:
-  - [ ] Command like: `uvicorn service_db_api.main:app --reload --port 8001`
+- [x] Implement `make run-db-api`:
+  - [x] Command like: `uvicorn service_db_api.main:app --reload --port 8001`
 
-- [ ] Verify manually:
+- [ ] Verify manually (requires MongoDB running):
   - [ ] `GET http://localhost:8001/health`
   - [ ] `GET http://localhost:8001/patients`
   - [ ] `GET http://localhost:8001/patients/P000123/summary`

@@ -1,0 +1,1 @@
+{"_id": {"$oid": "675000000000000000000020"}, "claim_id": "CLM-2024-0001", "patient_mrn": "P000123", "payer": "Acme Health Plan", "service_date": "2024-09-15", "cpt_codes": ["99213"], "icd10_codes": ["E11.9"], "billed_amount": 180.0, "allowed_amount": 120.0, "patient_responsibility": 30.0, "status": "paid"}

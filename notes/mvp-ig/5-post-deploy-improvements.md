@@ -4,9 +4,9 @@ Once the initial MVP is deployed and stable, use this document to track incremen
 
 ---
 
-## 2. Real LLM (Qwen3-4B-Thinking-2507, CPU)
+## 1. Real LLM (Qwen3-4B-Thinking-2507, CPU)
 
-### 2.1 Implement LLM_MODE=qwen
+### 1.1 Implement LLM_MODE=qwen
 
 - [ ] In `llm_client.py`:
   - [ ] Load Qwen3-4B-Thinking-2507 with Hugging Face on CPU
@@ -21,7 +21,7 @@ environment variables if needed to execute the download.
 
 Likely use transformers library to interact with the LLM; use your best judgement.
 
-### 2.2 Gradual Rollout
+### 1.2 Gradual Rollout
 
 - [ ] Start with local tests only
 - [ ] Add a staging environment, or dev namespace in EKS
@@ -29,16 +29,16 @@ Likely use transformers library to interact with the LLM; use your best judgemen
 
 ---
 
-## 5. Observability & Monitoring
+## 2. Observability & Monitoring
 
-### 5.1 OpenTelemetry
+### 2.1 OpenTelemetry
 
 - [ ] Replace custom tracing with OpenTelemetry:
   - [ ] Install OTEL SDK
   - [ ] Instrument FastAPI apps and HTTP clients
   - [ ] Configure exporter (e.g. CloudWatch, OTEL collector, Grafana Cloud)
 
-### 5.2 Metrics
+### 2.2 Metrics
 
 - [ ] Add metrics for:
   - [ ] Request counts, latency, and error rates per endpoint
@@ -52,7 +52,7 @@ Likely use transformers library to interact with the LLM; use your best judgemen
 
 ---
 
-## 6. Load Testing (Scenario 3)
+## 3. Load Testing (Scenario 3)
 
 - [ ] Choose k6 or Locust
 - [ ] Create load test scripts for:
@@ -71,7 +71,7 @@ Likely use transformers library to interact with the LLM; use your best judgemen
 
 ---
 
-## 3. Synthetic data improvements
+## 4. Synthetic data improvements
 Up until now, we probably have usedthe same snippets in `data-snippets.md`, or something close to it; just 1 record for 
 each model. Now, expand on that to create additional records--let's say, 10 each.
 
@@ -85,9 +85,9 @@ each model. Now, expand on that to create additional records--let's say, 10 each
 
 ---
 
-## 1. Vector Store & Embeddings (Pinecone)
+## 5. Vector Store & Embeddings (Pinecone)
 
-### 1.1 Enable VECTOR_MODE=pinecone
+### 5.1 Enable VECTOR_MODE=pinecone
 
 - [ ] Switch `VECTOR_MODE` to `"pinecone"` in config when ready
 - [ ] In `rag_service.py`:
@@ -95,7 +95,7 @@ each model. Now, expand on that to create additional records--let's say, 10 each
   - [ ] Call `pinecone_client.query_embeddings` with query vector
   - [ ] Filter by `patient_mrn` as appropriate
 
-### 1.2 Use Pinecone Results in /triage
+### 5.2 Use Pinecone Results in /triage
 
 - [ ] Extend `build_prompt`:
   - [ ] Retrieve top_k document snippets from Pinecone
@@ -104,9 +104,9 @@ each model. Now, expand on that to create additional records--let's say, 10 each
 
 ---
 
-## 4. Async Ingestion & Update Pipelines
+## 6. Async Ingestion & Update Pipelines
 
-### 4.1 Embedding Service
+### 6.1 Embedding Service
 
 - [ ] Optionally create `service_embeddings/`:
   - [ ] FastAPI with endpoint to accept doc/patient data
@@ -116,7 +116,7 @@ each model. Now, expand on that to create additional records--let's say, 10 each
   - [ ] When Mongo docs change, emit events to queue (e.g. SQS/Kafka)
   - [ ] `service_embeddings` consumes and updates vector DB
 
-### 4.2 Freshness Checks
+### 6.2 Freshness Checks
 
 - [ ] Build a script or job to:
   - [ ] Compare docs in Mongo with entries in Pinecone

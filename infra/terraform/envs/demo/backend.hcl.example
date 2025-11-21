@@ -1,0 +1,9 @@
+# Example backend configuration for S3
+# Copy this file to backend.hcl and fill in your actual values
+# Usage: terraform init -backend-config=backend.hcl
+
+bucket         = "your-terraform-state-bucket"
+key            = "carepath/demo/terraform.tfstate"
+region         = "us-east-1"
+encrypt        = true
+dynamodb_table = "your-terraform-lock-table"

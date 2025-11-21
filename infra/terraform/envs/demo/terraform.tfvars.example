@@ -1,0 +1,16 @@
+# Example Terraform variables for demo environment
+# Copy this file to terraform.tfvars and fill in your actual values
+
+environment = "demo"
+aws_region  = "us-east-1"
+
+# MongoDB Atlas Configuration
+mongodb_atlas_org_id      = "your-mongodb-atlas-org-id"
+mongodb_atlas_public_key  = "your-public-key"
+mongodb_atlas_private_key = "your-private-key"
+mongodb_username          = "carepath_admin"
+mongodb_password          = "CHANGE_ME_SECURE_PASSWORD"
+
+# Docker Images (update after building and pushing to ECR)
+db_api_image   = "123456789012.dkr.ecr.us-east-1.amazonaws.com/carepath-db-api:latest"
+chat_api_image = "123456789012.dkr.ecr.us-east-1.amazonaws.com/carepath-chat-api:latest"

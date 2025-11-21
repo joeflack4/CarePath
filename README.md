@@ -128,22 +128,16 @@ VECTOR_MODE=mock
 
 ## API Documentation
 
-### service_db_api (Port 8001)
+Full API documentation with request/response examples:
 
-- `GET /health` - Health check
-- `GET /health/db` - Database connectivity check
-- `GET /patients` - List patients (paginated)
-- `GET /patients/{mrn}` - Get patient by MRN
-- `GET /patients/{mrn}/summary` - Get comprehensive patient summary
-- `GET /encounters` - List encounters
-- `GET /claims` - List claims
-- `GET /documents` - List documents
-- `GET /chat-logs` - List chat logs
+- **[Database API (service_db_api)](docs/api-db.md)** - Port 8001
+  - Health checks, patients, encounters, claims, documents, chat logs
+  - Patient summary endpoint for RAG context
 
-### service_chat (Port 8002)
-
-- `GET /health` - Health check
-- `POST /triage` - AI-powered patient assistance
+- **[Chat API (service_chat)](docs/api-chat.md)** - Port 8002
+  - Health check and `/triage` endpoint
+  - Includes curl examples and expected responses
+  - `make test-triage` for quick testing
 
 See `notes/mvp-ig/` for detailed implementation guides.
 
@@ -166,6 +160,7 @@ make run-chat            # Run Chat API locally
 make generate-synthetic  # Generate synthetic data
 make load-synthetic      # Load data into MongoDB
 make download-llm-model  # Download Qwen3-4B-Thinking-2507 model
+make test-triage         # Test the /triage endpoint
 
 # Docker
 make docker-build-db-api

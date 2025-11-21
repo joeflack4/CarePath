@@ -1,0 +1,267 @@
+# Chat API Documentation
+
+The `service_chat` provides an AI-powered assistant for patient healthcare questions using RAG (Retrieval Augmented Generation).
+
+**Base URL:** `http://localhost:8002` (local development)
+
+---
+
+## Endpoints
+
+- `GET /health` - Health check
+- `POST /triage` - AI-powered patient assistance
+
+## Health Endpoint
+
+### GET /health
+
+Basic health check to verify the service is running.
+
+**Request:**
+```bash
+curl http://localhost:8002/health
+```
+
+**Response:**
+```json
+{
+  "status": "healthy",
+  "service": "service_chat"
+}
+```
+
+---
+
+## Triage Endpoint
+
+### POST /triage
+
+The main AI assistant endpoint. Accepts a patient MRN and a question, retrieves relevant patient data from the DB API, and generates an AI-powered response.
+
+**Request Body:**
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `patient_mrn` | string | Yes | Patient's medical record number |
+| `query` | string | Yes | The user's question about their health |
+
+---
+
+## Example Usage
+
+### Using curl
+
+**Request:**
+```bash
+curl -X POST http://localhost:8002/triage \
+  -H "Content-Type: application/json" \
+  -d '{
+    "patient_mrn": "P000123",
+    "query": "Why did my doctor change my diabetes medication?"
+  }'
+```
+
+**Response (Mock LLM Mode):**
+```json
+{
+  "response": "This is a mock response from the AI assistant. In production, this would be replaced with a real LLM response.",
+  "trace_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "patient_mrn": "P000123",
+  "llm_mode": "mock"
+}
+```
+
+**Response (Real LLM Mode - Qwen3-4B-Thinking-2507):**
+```json
+{
+  "response": "Based on your medical records, I can see that your doctor changed your diabetes medication during your visit on January 15, 2024. Your recent HbA1c test showed a level of 7.2%, which indicates your diabetes is reasonably well controlled. However, the medication change from Metformin 500mg to Metformin 850mg was likely made to achieve even better blood sugar control and bring your HbA1c closer to the target range of below 7%. This adjustment is a common practice when patients are tolerating their current medication well but could benefit from slightly more aggressive management. If you have concerns about this change or experience any side effects, I recommend discussing them with Dr. Sarah Chen at your next appointment.",
+  "trace_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "patient_mrn": "P000123",
+  "llm_mode": "Qwen3-4B-Thinking-2507"
+}
+```
+
+---
+
+### Using the Makefile
+
+A convenient Makefile target is provided for testing the triage endpoint:
+
+```bash
+# Test with default query ("What are my current medications?")
+make test-triage
+
+# Test with a custom query using the 'm' parameter
+make test-triage m='Why did my doctor change my diabetes medication?'
+
+# More examples
+make test-triage m='What is my diagnosis?'
+make test-triage m='When is my next appointment?'
+```
+
+---
+
+### Using Python
+
+```python
+import httpx
+
+response = httpx.post(
+    "http://localhost:8002/triage",
+    json={
+        "patient_mrn": "P000123",
+        "query": "What are my current medications?"
+    }
+)
+
+data = response.json()
+print(f"Response: {data['response']}")
+print(f"Trace ID: {data['trace_id']}")
+```
+
+---
+
+## Response Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `response` | string | The AI-generated response to the user's query |
+| `trace_id` | string | Unique identifier for request tracing and debugging |
+| `patient_mrn` | string | Echo of the patient MRN from the request |
+| `llm_mode` | string | The LLM mode used (`mock` or `Qwen3-4B-Thinking-2507`) |
+
+---
+
+## Error Responses
+
+### Patient Not Found (404)
+
+When the specified patient MRN doesn't exist in the database.
+
+**Request:**
+```bash
+curl -X POST http://localhost:8002/triage \
+  -H "Content-Type: application/json" \
+  -d '{
+    "patient_mrn": "INVALID_MRN",
+    "query": "What is my diagnosis?"
+  }'
+```
+
+**Response:**
+```json
+{
+  "detail": "Patient with MRN INVALID_MRN not found"
+}
+```
+
+---
+
+### Validation Error (422)
+
+When the request body is missing required fields.
+
+**Request:**
+```bash
+curl -X POST http://localhost:8002/triage \
+  -H "Content-Type: application/json" \
+  -d '{
+    "patient_mrn": "P000123"
+  }'
+```
+
+**Response:**
+```json
+{
+  "detail": [
+    {
+      "loc": ["body", "query"],
+      "msg": "field required",
+      "type": "value_error.missing"
+    }
+  ]
+}
+```
+
+---
+
+### DB API Unavailable (503)
+
+When the chat service cannot reach the database API.
+
+**Response:**
+```json
+{
+  "detail": "Database API service unavailable"
+}
+```
+
+---
+
+## How It Works
+
+1. **Request Received**: The `/triage` endpoint receives a patient MRN and query
+2. **Trace Started**: A unique trace ID is generated for request tracking
+3. **Patient Data Fetched**: The service calls `service_db_api` to get the patient summary
+4. **Prompt Built**: Patient data is formatted into a prompt context for the LLM
+5. **LLM Response Generated**:
+   - **Mock mode**: Returns a placeholder response (fast, for testing)
+   - **Qwen mode**: Generates a real response using the Qwen3-4B model (slower, ~5-15s on CPU)
+6. **Response Returned**: The AI response is returned with trace ID for debugging
+
+---
+
+## Configuration
+
+The chat service behavior is controlled by environment variables:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `LLM_MODE` | `mock` | LLM mode: `mock` or `Qwen3-4B-Thinking-2507` |
+| `DB_API_BASE_URL` | `http://localhost:8001` | URL of the database API service |
+| `VECTOR_MODE` | `mock` | Vector DB mode (future use) |
+| `LOG_LEVEL` | `INFO` | Logging verbosity |
+
+To switch to real LLM mode:
+```bash
+# In .env file
+LLM_MODE=Qwen3-4B-Thinking-2507
+
+# Or via command line
+LLM_MODE=Qwen3-4B-Thinking-2507 make run-chat
+```
+
+---
+
+## Tracing
+
+Every request generates a unique `trace_id` that can be used for:
+- Debugging issues in logs
+- Correlating requests across services
+- Performance monitoring
+
+Search logs by trace ID:
+```bash
+grep "a1b2c3d4-e5f6-7890-abcd-ef1234567890" logs/*.log
+```
+
+---
+
+## Performance Notes
+
+| LLM Mode | Typical Latency | Notes |
+|----------|-----------------|-------|
+| `mock` | <100ms | For testing and development |
+| `Qwen3-4B-Thinking-2507` | 5-15s | CPU inference, first request slower due to model loading |
+
+For production deployments with real LLM:
+- Consider GPU instances for faster inference
+- Model is cached after first load
+- Increase pod resources (CPU/memory limits)
+
+---
+
+## Related Resources
+
+- **[Database API Documentation](api-db.md)** - Data endpoints used by this service
+- **[Model Management](models.md)** - How to configure and deploy LLM models
+- **[AI Service Upgrade Guide](../notes/ai-service-upgrade.md)** - Deploying with real LLM

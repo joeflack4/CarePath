@@ -26,7 +26,7 @@ def load_synthetic_data(mongodb_uri=None, db_name=None, drop_collections=False):
     mongodb_uri = mongodb_uri or os.getenv("MONGODB_URI", "mongodb://localhost:27017")
     db_name = db_name or os.getenv("MONGODB_DB_NAME", "carepath")
 
-    print(f"Connecting to MongoDB at {mongodb_uri}")
+    print(f"Connecting to MongoDB")
     print(f"Database: {db_name}")
 
     try:

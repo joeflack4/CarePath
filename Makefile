@@ -1,6 +1,6 @@
 .PHONY: help install-db-api install-chat run-db-api run-chat load-synthetic generate-synthetic download-llm-model \
-install-chat-llm docker-build-db-api docker-build-chat docker-push-db-api docker-push-chat ecr-login aws-login tf-login\
-tf-init tf-plan tf-apply tf-destroy deploy-db-api deploy-chat deploy-all mongo-local-start-macos \
+install-chat-llm test-triage docker-build-db-api docker-build-chat docker-push-db-api docker-push-chat ecr-login \
+aws-login tf-login tf-init tf-plan tf-apply tf-destroy deploy-db-api deploy-chat deploy-all mongo-local-start-macos \
 mongo-local-install-macos
 
 # Default target
@@ -16,6 +16,8 @@ help:
 	@echo "  make generate-synthetic  - Generate synthetic data files"
 	@echo "  make load-synthetic      - Load synthetic data into MongoDB"
 	@echo "  make download-llm-model  - Download Qwen3-4B-Thinking-2507 model"
+	@echo "  make test-triage         - Test the /triage endpoint (requires services running)"
+	@echo "                             Usage: make test-triage m='your question here'"
 	@echo ""
 	@echo "Docker / Build:"
 	@echo "  make docker-build-db-api - Build Docker image for db-api"
@@ -73,6 +75,14 @@ download-llm-model:
 	@echo "Downloading Qwen3-4B-Thinking-2507 model from Hugging Face..."
 	@python -c "from service_chat.services.model_manager import download_model_if_needed; download_model_if_needed()"
 	@echo "✅ Model downloaded successfully"
+
+test-triage:
+	@echo "Testing /triage endpoint..."
+	@curl -s -X POST http://localhost:8002/triage \
+		-H "Content-Type: application/json" \
+		-d '{"patient_mrn": "P000123", "query": "$(if $(m),$(m),What are my current medications?)"}' | python -m json.tool
+	@echo ""
+	@echo "✅ Test complete"
 
 mongo-local-install-macos:
 	brew tap mongodb/brew

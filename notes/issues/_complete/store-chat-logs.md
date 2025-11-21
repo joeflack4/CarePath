@@ -109,15 +109,17 @@ The current synthetic data shows FTS-style retrieval. We need to support simpler
 
 ## 5. Infrastructure: Ensure Chat Service Can POST to DB API
 
-- [ ] Review Terraform configuration (`infra/terraform/modules/app/main.tf`):
-  - [ ] Verify chat-api can reach db-api via internal service URL
-  - [ ] Current: `DB_API_BASE_URL=http://db-api-service.carepath-demo.svc.cluster.local:8001`
-  - [ ] This should work for both GET and POST - no changes expected
+- [x] Review Terraform configuration (`infra/terraform/modules/app/main.tf`):
+  - [x] Verify chat-api can reach db-api via internal service URL
+  - [x] Current: `DB_API_BASE_URL=http://db-api-service.${namespace}.svc.cluster.local:8001`
+  - [x] This should work for both GET and POST - no changes expected
 
-- [ ] Verify Kubernetes network policies (if any):
-  - [ ] Ensure chat-api pods can make HTTP POST requests to db-api pods
+- [x] Verify Kubernetes network policies (if any):
+  - [x] Ensure chat-api pods can make HTTP POST requests to db-api pods
+  - [x] **Result**: No NetworkPolicies defined - all pod-to-pod communication allowed
 
-- [ ] No additional infrastructure changes should be needed (same HTTP client, same service mesh)
+- [x] No additional infrastructure changes should be needed (same HTTP client, same service mesh)
+  - [x] **Confirmed**: ClusterIP service, same namespace, no restrictions
 
 ---
 

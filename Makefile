@@ -1,4 +1,7 @@
-.PHONY: help install-db-api install-chat run-db-api run-chat load-synthetic generate-synthetic aws-login tf-login
+.PHONY: help install-db-api install-chat run-db-api run-chat load-synthetic generate-synthetic \
+        docker-build-db-api docker-build-chat docker-push-db-api docker-push-chat ecr-login \
+        aws-login tf-login tf-init tf-plan tf-apply tf-destroy \
+        deploy-db-api deploy-chat deploy-all
 
 # Default target
 help:
@@ -15,6 +18,7 @@ help:
 	@echo "Docker / Build:"
 	@echo "  make docker-build-db-api - Build Docker image for db-api"
 	@echo "  make docker-build-chat   - Build Docker image for chat-api"
+	@echo "  make ecr-login           - Log in to AWS ECR"
 	@echo "  make docker-push-db-api  - Push db-api image to ECR"
 	@echo "  make docker-push-chat    - Push chat-api image to ECR"
 	@echo ""
@@ -59,18 +63,45 @@ load-synthetic:
 	@echo "Loading synthetic data into MongoDB..."
 	python scripts/load_synthetic_data.py --drop
 
-# Docker / Build targets (to be implemented)
+# Docker / Build targets
+# Get ECR URLs from Terraform outputs
+ECR_DB_API_URL := $(shell cd infra/terraform/envs/demo && terraform output -raw db_api_repo_url 2>/dev/null || echo "")
+ECR_CHAT_API_URL := $(shell cd infra/terraform/envs/demo && terraform output -raw chat_api_repo_url 2>/dev/null || echo "")
+AWS_ACCOUNT_ID := $(shell aws sts get-caller-identity --query Account --output text 2>/dev/null || echo "")
+AWS_REGION := $(shell echo $(DEPLOY_AWS_REGION))
+
 docker-build-db-api:
-	@echo "Docker build for db-api not yet implemented"
+	@echo "Building Docker image for db-api..."
+	docker build -t carepath-db-api:latest -f service_db_api/Dockerfile service_db_api/
 
 docker-build-chat:
-	@echo "Docker build for chat not yet implemented"
+	@echo "Building Docker image for chat-api..."
+	docker build -t carepath-chat-api:latest -f service_chat/Dockerfile service_chat/
 
-docker-push-db-api:
-	@echo "Docker push for db-api not yet implemented"
+ecr-login:
+	@echo "Logging into ECR..."
+	aws ecr get-login-password --region $(AWS_REGION) | \
+		docker login --username AWS --password-stdin $(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com
 
-docker-push-chat:
-	@echo "Docker push for chat not yet implemented"
+docker-push-db-api: ecr-login
+	@echo "Tagging and pushing db-api image to ECR..."
+	@if [ -z "$(ECR_DB_API_URL)" ]; then \
+		echo "Error: ECR URL not found. Run 'make tf-apply' first."; \
+		exit 1; \
+	fi
+	docker tag carepath-db-api:latest $(ECR_DB_API_URL):latest
+	docker push $(ECR_DB_API_URL):latest
+	@echo "✅ db-api image pushed to $(ECR_DB_API_URL):latest"
+
+docker-push-chat: ecr-login
+	@echo "Tagging and pushing chat-api image to ECR..."
+	@if [ -z "$(ECR_CHAT_API_URL)" ]; then \
+		echo "Error: ECR URL not found. Run 'make tf-apply' first."; \
+		exit 1; \
+	fi
+	docker tag carepath-chat-api:latest $(ECR_CHAT_API_URL):latest
+	docker push $(ECR_CHAT_API_URL):latest
+	@echo "✅ chat-api image pushed to $(ECR_CHAT_API_URL):latest"
 
 # Infrastructure targets (to be implemented)
 # Login
@@ -93,23 +124,36 @@ aws-login:
 tf-login: aws-login
 
 tf-init:
-	@echo "Terraform init not yet implemented"
+	@echo "Initializing Terraform..."
+	cd infra/terraform/envs/demo && terraform init -backend-config=backend.hcl
 
 tf-plan:
-	@echo "Terraform plan not yet implemented"
+	@echo "Planning Terraform changes..."
+	cd infra/terraform/envs/demo && terraform plan
 
 tf-apply:
-	@echo "Terraform apply not yet implemented"
+	@echo "Applying Terraform changes..."
+	cd infra/terraform/envs/demo && terraform apply
 
 tf-destroy:
-	@echo "Terraform destroy not yet implemented"
+	@echo "Destroying Terraform resources..."
+	cd infra/terraform/envs/demo && terraform destroy
 
-# Deployment targets (to be implemented)
-deploy-db-api:
-	@echo "Deploy db-api not yet implemented"
+# Deployment targets
+deploy-db-api: docker-build-db-api docker-push-db-api
+	@echo "Deploying db-api..."
+	@echo "Updating Terraform with new image..."
+	cd infra/terraform/envs/demo && terraform apply -target=module.app.kubernetes_deployment.db_api -auto-approve
+	@echo "✅ db-api deployed successfully"
 
-deploy-chat:
-	@echo "Deploy chat not yet implemented"
+deploy-chat: docker-build-chat docker-push-chat
+	@echo "Deploying chat-api..."
+	@echo "Updating Terraform with new image..."
+	cd infra/terraform/envs/demo && terraform apply -target=module.app.kubernetes_deployment.chat_api -auto-approve
+	@echo "✅ chat-api deployed successfully"
 
-deploy-all:
-	@echo "Deploy all not yet implemented"
+deploy-all: docker-build-db-api docker-build-chat docker-push-db-api docker-push-chat
+	@echo "Deploying all services..."
+	@echo "Running full Terraform apply..."
+	cd infra/terraform/envs/demo && terraform apply
+	@echo "✅ All services deployed successfully"

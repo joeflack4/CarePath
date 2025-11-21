@@ -70,11 +70,11 @@ The following docs have been created as a single multi-doc implementation guide.
   - [x] Implement simple tracing
   - [ ] Verify `/triage` uses patient summary and mock LLM (requires both services running)
 
-- [ ] Phase 4 – Docker + Terraform (infra)
-  - [ ] Create Dockerfiles for both services
-  - [ ] Create Terraform modules for network, EKS, ECR, Mongo Atlas, and app
-  - [ ] Configure HPA based on CPU
-  - [ ] Wire env vars and K8s Secrets/ConfigMaps
+- [x] Phase 4 – Docker + Terraform (infra)
+  - [x] Create Dockerfiles for both services
+  - [x] Create Terraform modules for network, EKS, ECR, Mongo Atlas, and app
+  - [x] Configure HPA based on CPU
+  - [x] Wire env vars and K8s Secrets/ConfigMaps
 
 - [ ] Phase 5 – Initial deploy
   - [ ] Build & push images for both services

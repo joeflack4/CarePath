@@ -6,7 +6,15 @@ Once the initial MVP is deployed and stable, use this document to track incremen
 
 ## 1. Real LLM (Qwen3-4B-Thinking-2507, CPU)
 
-### 1.1 Implement LLM_MODE=qwen
+### 1.1 Implement LLM_MODE=Qwen3-4B-Thinking-2507
+
+Ref: https://huggingface.co/Qwen/Qwen3-4B-Thinking-2507
+
+- [ ] If possible, make it such that we can automatically download this model.
+  - [ ] Use hugging face python library if possible. If need help with auth, prompt user.
+  - [ ] Have makefile command(s) to do the download.
+  - [ ] Ensure that deployment (dockerfile, terraform setup) is set up in such a way that it is set up to dowlnoad the 
+    model during the container set up process, and that the LLM is able to be utilized in the deployed service. 
 
 - [ ] In `llm_client.py`:
   - [ ] Load Qwen3-4B-Thinking-2507 with Hugging Face on CPU
@@ -16,6 +24,9 @@ Once the initial MVP is deployed and stable, use this document to track incremen
   - [ ] `"mock"` – current MVP behavior
   - [ ] `"qwen"` – real inference
 
+- [ ] Renames if necessary: If there are refs in the codebase that say `LLM_MODE=qwen`, change that to say 
+`LLM_MODE=Qwen3-4B-Thinking-2507` instead.
+
 This should involve a hugging face library to download the model if it is not present on disk. Prompt the user for 
 environment variables if needed to execute the download.
 
@@ -23,9 +34,16 @@ Likely use transformers library to interact with the LLM; use your best judgemen
 
 ### 1.2 Gradual Rollout
 
-- [ ] Start with local tests only
-- [ ] Add a staging environment, or dev namespace in EKS
-- [ ] Only enable `LLM_MODE=qwen` in non-prod first
+- [ ] Write a document: `notes/rollout-options.md`, that explains some different options: (i) replacing all pods at once with 
+the new ones, one at a time, until all pods are the new version, (ii) a feature-controlling scheme where a certain % of 
+traffic / users are routed to the new version of the app, (iii) separate deployments entirely for staging and prod.
+- [ ] For now, though, we're going to go with option (i), so create a task document, `notes/ai-service-upgrade.md`, 
+where you create a list of markdown checkbox tasks to execute to go about executing this deployment. But don't get 
+started on that work until prompted.
+
+### 1.3. Docs
+- [ ] `docs/models.md`: Write about how the setup works, how to download models, and how to deploy new models, and do 
+rollbacks to change to a previous deployment, or select different LLM_MODE's. Link to the document in `README.md`.
 
 ---
 
@@ -50,6 +68,10 @@ Likely use transformers library to interact with the LLM; use your best judgemen
   - [ ] p50/p95/p99 latency for `/triage`
   - [ ] HPA scaling behavior over time
 
+### 2.3. Docs
+- [ ] `docs/observability.md`: Document the metrics that are tracked, and how to access them. Link to the document in 
+`README.md`.
+
 ---
 
 ## 3. Load Testing (Scenario 3)
@@ -69,6 +91,10 @@ Likely use transformers library to interact with the LLM; use your best judgemen
   - [ ] Results
   - [ ] Observed scaling
 
+- [ ] Makefile commands
+
+- [ ] Docs: `docs/load-testing.md`.  Link to the document in `README.md`.
+
 ---
 
 ## 4. Synthetic data improvements
@@ -83,11 +109,26 @@ each model. Now, expand on that to create additional records--let's say, 10 each
   - [ ] `data/synthetic/chat_logs.jsonl`
   - [ ] (Optional) providers/audit_logs JSONL files
 
+- [ ] Load Mongo DB with the new data.
+
 ---
 
-## 5. Vector Store & Embeddings (Pinecone)
+## 5. Vector Store & Embeddings
 
-### 5.1 Enable VECTOR_MODE=pinecone
+### 5.1. Proposal
+- [ ] Craate: `notes/vector-store-spec.md`. In it, come up with a number of recommended use cases for the vector store. 
+Each use case should get its own dedicated section. Example use cases: (i) FTS, (ii) Find similar patients. In a summary 
+section, create an ordered list of your most to least recommended use cases that we should consider implementing for 
+this app. When working on this, consider the data that we have in Mongo DB, and how we could vectroize it. You can use 
+`data-snippets.md` as reference.
+  - Vectors should be stored on Pinecone, so logic should exist in the AI chat service to query it.
+  - Should include implementation of a new service to create these embeddings and upload them to pinecone. 
+  - Your spec doc should also have a general list of implementation tasks. Use the below snippet as a starter 
+reference. 
+
+```md
+# Vector store
+## Enable VECTOR_MODE=pinecone
 
 - [ ] Switch `VECTOR_MODE` to `"pinecone"` in config when ready
 - [ ] In `rag_service.py`:
@@ -95,18 +136,15 @@ each model. Now, expand on that to create additional records--let's say, 10 each
   - [ ] Call `pinecone_client.query_embeddings` with query vector
   - [ ] Filter by `patient_mrn` as appropriate
 
-### 5.2 Use Pinecone Results in /triage
+## Use Pinecone Results in /triage
 
 - [ ] Extend `build_prompt`:
   - [ ] Retrieve top_k document snippets from Pinecone
   - [ ] Join them into the prompt alongside patient summary
 - [ ] Make RAG behavior configurable via env var (e.g. `ENABLE_VECTOR_CONTEXT`)
 
----
-
-## 6. Async Ingestion & Update Pipelines
-
-### 6.1 Embedding Service
+# Embedding service, and Async Ingestion & Update Pipelines
+## Embedding Service
 
 - [ ] Optionally create `service_embeddings/`:
   - [ ] FastAPI with endpoint to accept doc/patient data
@@ -116,11 +154,12 @@ each model. Now, expand on that to create additional records--let's say, 10 each
   - [ ] When Mongo docs change, emit events to queue (e.g. SQS/Kafka)
   - [ ] `service_embeddings` consumes and updates vector DB
 
-### 6.2 Freshness Checks
+## Freshness Checks
 
 - [ ] Build a script or job to:
   - [ ] Compare docs in Mongo with entries in Pinecone
   - [ ] Log or alert on missing or stale embeddings
+```
 
 ---
 

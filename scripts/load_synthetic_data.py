@@ -35,10 +35,10 @@ def load_synthetic_data(mongodb_uri=None, db_name=None, drop_collections=False):
 
         # Test connection
         client.server_info()
-        print(" Connected to MongoDB")
+        print("\t Connected to MongoDB")
 
     except Exception as e:
-        print(f" Failed to connect to MongoDB: {e}")
+        print(f"Failed to connect to MongoDB: {e}")
         sys.exit(1)
 
     # Define collections and their JSONL files
@@ -57,13 +57,13 @@ def load_synthetic_data(mongodb_uri=None, db_name=None, drop_collections=False):
         file_path = data_dir / filename
 
         if not file_path.exists():
-            print(f"˜ Skipping {collection_name}: file not found ({file_path})")
+            print(f"[SKIP] Skipping {collection_name}: file not found ({file_path})")
             continue
 
         # Optionally drop collection
         if drop_collections:
             db[collection_name].drop()
-            print(f" Dropped collection: {collection_name}")
+            print(f"\t Dropped collection: {collection_name}")
 
         # Read JSONL file
         documents = []
@@ -78,45 +78,45 @@ def load_synthetic_data(mongodb_uri=None, db_name=None, drop_collections=False):
             # Bulk insert
             try:
                 result = db[collection_name].insert_many(documents, ordered=False)
-                print(f" Loaded {len(result.inserted_ids)} documents into {collection_name}")
+                print(f"\t Loaded {len(result.inserted_ids)} documents into {collection_name}")
             except Exception as e:
-                print(f"  Error loading {collection_name}: {e}")
+                print(f"Error loading {collection_name}: {e}")
         else:
-            print(f"˜ No documents found in {filename}")
+            print(f"[WARN] No documents found in {filename}")
 
     # Create indexes
     print("\nCreating indexes...")
 
     try:
         db.patients.create_index("mrn", unique=True)
-        print(" Created index: patients.mrn")
+        print("\t Created index: patients.mrn")
 
         db.encounters.create_index("patient_mrn")
         db.encounters.create_index("encounter_id", unique=True)
-        print(" Created indexes: encounters.patient_mrn, encounters.encounter_id")
+        print("\t Created indexes: encounters.patient_mrn, encounters.encounter_id")
 
         db.claims.create_index("patient_mrn")
         db.claims.create_index("claim_id", unique=True)
-        print(" Created indexes: claims.patient_mrn, claims.claim_id")
+        print("\t Created indexes: claims.patient_mrn, claims.claim_id")
 
         db.documents.create_index("doc_id", unique=True)
         db.documents.create_index("patient_mrn")
-        print(" Created indexes: documents.doc_id, documents.patient_mrn")
+        print("\t Created indexes: documents.doc_id, documents.patient_mrn")
 
         db.chat_logs.create_index("conversation_id", unique=True)
         db.chat_logs.create_index("patient_mrn")
-        print(" Created indexes: chat_logs.conversation_id, chat_logs.patient_mrn")
+        print("\t Created indexes: chat_logs.conversation_id, chat_logs.patient_mrn")
 
         db.providers.create_index("provider_id", unique=True)
-        print(" Created index: providers.provider_id")
+        print("\t Created index: providers.provider_id")
 
         db.audit_logs.create_index("event_id", unique=True)
-        print(" Created index: audit_logs.event_id")
+        print("\t Created index: audit_logs.event_id")
 
     except Exception as e:
-        print(f"  Error creating indexes: {e}")
+        print(f"Error creating indexes: {e}")
 
-    print("\n Synthetic data loaded successfully!")
+    print("\n\t Synthetic data loaded successfully!")
     client.close()
 
 

@@ -10,21 +10,21 @@ Once the initial MVP is deployed and stable, use this document to track incremen
 
 Ref: https://huggingface.co/Qwen/Qwen3-4B-Thinking-2507
 
-- [ ] If possible, make it such that we can automatically download this model.
-  - [ ] Use hugging face python library if possible. If need help with auth, prompt user.
-  - [ ] Have makefile command(s) to do the download.
-  - [ ] Ensure that deployment (dockerfile, terraform setup) is set up in such a way that it is set up to dowlnoad the 
-    model during the container set up process, and that the LLM is able to be utilized in the deployed service. 
+- [x] If possible, make it such that we can automatically download this model.
+  - [x] Use hugging face python library if possible. If need help with auth, prompt user.
+  - [x] Have makefile command(s) to do the download.
+  - [x] Ensure that deployment (dockerfile, terraform setup) is set up in such a way that it is set up to dowlnoad the
+    model during the container set up process, and that the LLM is able to be utilized in the deployed service.
 
-- [ ] In `llm_client.py`:
-  - [ ] Load Qwen3-4B-Thinking-2507 with Hugging Face on CPU
-  - [ ] Implement `generate_response_qwen(query, patient_summary, optional_docs)`
+- [x] In `llm_client.py`:
+  - [x] Load Qwen3-4B-Thinking-2507 with Hugging Face on CPU
+  - [x] Implement `generate_response_qwen(query, patient_summary, optional_docs)`
 
-- [ ] Control behavior via `LLM_MODE`:
-  - [ ] `"mock"` – current MVP behavior
-  - [ ] `"qwen"` – real inference
+- [x] Control behavior via `LLM_MODE`:
+  - [x] `"mock"` – current MVP behavior
+  - [x] `"qwen"` – real inference
 
-- [ ] Renames if necessary: If there are refs in the codebase that say `LLM_MODE=qwen`, change that to say 
+- [x] Renames if necessary: If there are refs in the codebase that say `LLM_MODE=qwen`, change that to say
 `LLM_MODE=Qwen3-4B-Thinking-2507` instead.
 
 This should involve a hugging face library to download the model if it is not present on disk. Prompt the user for 
@@ -34,15 +34,15 @@ Likely use transformers library to interact with the LLM; use your best judgemen
 
 ### 1.2 Gradual Rollout
 
-- [ ] Write a document: `notes/rollout-options.md`, that explains some different options: (i) replacing all pods at once with 
-the new ones, one at a time, until all pods are the new version, (ii) a feature-controlling scheme where a certain % of 
+- [x] Write a document: `notes/rollout-options.md`, that explains some different options: (i) replacing all pods at once with
+the new ones, one at a time, until all pods are the new version, (ii) a feature-controlling scheme where a certain % of
 traffic / users are routed to the new version of the app, (iii) separate deployments entirely for staging and prod.
-- [ ] For now, though, we're going to go with option (i), so create a task document, `notes/ai-service-upgrade.md`, 
-where you create a list of markdown checkbox tasks to execute to go about executing this deployment. But don't get 
+- [x] For now, though, we're going to go with option (i), so create a task document, `notes/ai-service-upgrade.md`,
+where you create a list of markdown checkbox tasks to execute to go about executing this deployment. But don't get
 started on that work until prompted.
 
 ### 1.3. Docs
-- [ ] `docs/models.md`: Write about how the setup works, how to download models, and how to deploy new models, and do 
+- [x] `docs/models.md`: Write about how the setup works, how to download models, and how to deploy new models, and do
 rollbacks to change to a previous deployment, or select different LLM_MODE's. Link to the document in `README.md`.
 
 ---

@@ -1,7 +1,7 @@
-.PHONY: help install-db-api install-chat run-db-api run-chat load-synthetic generate-synthetic \
-        docker-build-db-api docker-build-chat docker-push-db-api docker-push-chat ecr-login \
-        aws-login tf-login tf-init tf-plan tf-apply tf-destroy \
-        deploy-db-api deploy-chat deploy-all
+.PHONY: help install-db-api install-chat run-db-api run-chat load-synthetic generate-synthetic download-llm-model \
+install-chat-llm docker-build-db-api docker-build-chat docker-push-db-api docker-push-chat ecr-login aws-login tf-login\
+tf-init tf-plan tf-apply tf-destroy deploy-db-api deploy-chat deploy-all mongo-local-start-macos \
+mongo-local-install-macos
 
 # Default target
 help:
@@ -10,10 +10,12 @@ help:
 	@echo "Development:"
 	@echo "  make install-db-api      - Install dependencies for service_db_api"
 	@echo "  make install-chat        - Install dependencies for service_chat"
+	@echo "  make install-chat-llm    - Install LLM dependencies for service_chat"
 	@echo "  make run-db-api          - Run db API locally with uvicorn"
 	@echo "  make run-chat            - Run chat API locally with uvicorn"
 	@echo "  make generate-synthetic  - Generate synthetic data files"
 	@echo "  make load-synthetic      - Load synthetic data into MongoDB"
+	@echo "  make download-llm-model  - Download Qwen3-4B-Thinking-2507 model"
 	@echo ""
 	@echo "Docker / Build:"
 	@echo "  make docker-build-db-api - Build Docker image for db-api"
@@ -47,6 +49,10 @@ install-chat:
 	@echo "Installing dependencies for service_chat..."
 	pip install fastapi uvicorn httpx pydantic-settings
 
+install-chat-llm:
+	@echo "Installing LLM dependencies for service_chat..."
+	pip install torch transformers huggingface-hub
+
 run-db-api:
 	@echo "Starting service_db_api on port 8001..."
 	uvicorn service_db_api.main:app --reload --port 8001
@@ -62,6 +68,18 @@ generate-synthetic:
 load-synthetic:
 	@echo "Loading synthetic data into MongoDB..."
 	python scripts/load_synthetic_data.py --drop
+
+download-llm-model:
+	@echo "Downloading Qwen3-4B-Thinking-2507 model from Hugging Face..."
+	@python -c "from service_chat.services.model_manager import download_model_if_needed; download_model_if_needed()"
+	@echo "✅ Model downloaded successfully"
+
+mongo-local-install-macos:
+	brew tap mongodb/brew
+	brew install mongodb-community@7.0
+
+mongo-local-start-macos:
+	brew services start mongodb-community@7.0
 
 # Docker / Build targets
 # Get ECR URLs from Terraform outputs

@@ -7,7 +7,8 @@ An AI assistant backend that helps patients understand their health history and 
 CarePath AI is a multi-service healthcare demo built with Python and FastAPI, demonstrating:
 - **MongoDB-backed API** for healthcare data (patients, encounters, claims, documents)
 - **AI chat service** with RAG (Retrieval Augmented Generation) capabilities
-- **Mock LLM** for MVP (with scaffolding for real models like Qwen3-4B)
+- **LLM Integration** with Qwen3-4B-Thinking-2507 model (CPU-based inference)
+- **Mock LLM mode** for testing and development
 - **Vector database integration** scaffold (Pinecone, not wired in MVP)
 - **Simple distributed tracing** with trace IDs
 - **PHI scrubbing** placeholder for HIPAA compliance
@@ -15,18 +16,18 @@ CarePath AI is a multi-service healthcare demo built with Python and FastAPI, de
 ## Architecture
 
 ```
-┌─────────────────┐         HTTP          ┌──────────────────┐
-│  service_chat   │ ──────────────────▶   │ service_db_api   │
+┌─────────────────┐         HTTP           ┌──────────────────┐
+│  service_chat   │ ──────────────────▶    │ service_db_api   │
 │  (AI Assistant) │                        │  (MongoDB API)   │
 │  Port: 8002     │                        │  Port: 8001      │
 └─────────────────┘                        └──────────────────┘
         │                                           │
-        │ LLM (Mock)                               │
-        │ Vector DB (Mock)                         │
-        │                                          │
-        ▼                                          ▼
-   (Future: Qwen3)                           MongoDB Atlas
-   (Future: Pinecone)
+        │                                           │
+        │                                           │
+        │                                           │
+        ▼                                           ▼
+   ( LLM )                                    MongoDB Atlas
+   ( Pinecone )
 ```
 
 ## Quick Start
@@ -144,53 +145,41 @@ VECTOR_MODE=mock
 - `GET /health` - Health check
 - `POST /triage` - AI-powered patient assistance
 
-## Development Status
-
-**Completed (Phases 1-3):**
-- ✅ Repository structure and environment setup
-- ✅ MongoDB API with all core endpoints
-- ✅ Synthetic data generation and loading
-- ✅ AI chat service with mock LLM
-- ✅ RAG scaffolding (using patient summary)
-- ✅ Distributed tracing with trace IDs
-- ✅ PHI scrubbing placeholder
-- ✅ Makefile automation
-
-**TODO (Phases 4-6):**
-- ⏳ Docker images for both services
-- ⏳ Terraform infrastructure (EKS, ECR, MongoDB Atlas)
-- ⏳ HPA (Horizontal Pod Autoscaler) configuration
-- ⏳ Real LLM integration (Qwen3-4B-Thinking-2507)
-- ⏳ Pinecone vector database integration
-- ⏳ Async document ingestion pipeline
-- ⏳ Enhanced tracing (OpenTelemetry)
-
 See `notes/mvp-ig/` for detailed implementation guides.
 
-## Makefile Commands
+## Documentation
+
+- **[Model Management](docs/models.md)** - How to download, deploy, and manage LLM models
+- **[Infrastructure Guide](infra/terraform/README.md)** - Terraform setup and deployment instructions
+- **[Deployment Options](notes/rollout-options.md)** - Different strategies for deploying services
+- **[AI Service Upgrade](notes/ai-service-upgrade.md)** - Step-by-step guide for deploying Qwen LLM
+
+## Makefile Command summary
 
 ```bash
 # Development
 make install-db-api      # Install DB API dependencies
 make install-chat        # Install Chat API dependencies
+make install-chat-llm    # Install LLM dependencies (torch, transformers)
 make run-db-api          # Run DB API locally
 make run-chat            # Run Chat API locally
 make generate-synthetic  # Generate synthetic data
 make load-synthetic      # Load data into MongoDB
+make download-llm-model  # Download Qwen3-4B-Thinking-2507 model
 
-# Docker (to be implemented)
+# Docker
 make docker-build-db-api
 make docker-build-chat
 make docker-push-db-api
 make docker-push-chat
 
-# Infrastructure (to be implemented)
+# Infrastructure
 make tf-init
 make tf-plan
 make tf-apply
 make tf-destroy
 
-# Deployment (to be implemented)
+# Deployment
 make deploy-db-api
 make deploy-chat
 make deploy-all
@@ -202,14 +191,6 @@ make deploy-all
 - **Database:** MongoDB (Motor async driver)
 - **HTTP Client:** httpx
 - **Configuration:** pydantic-settings
-- **LLM (Future):** Qwen3-4B-Thinking-2507
+- **LLM:** Qwen3-4B-Thinking-2507 (via Hugging Face Transformers)
 - **Vector DB (Future):** Pinecone
-- **Infrastructure (Future):** AWS EKS, Terraform, Docker
-
-## Contributing
-
-This is a demo project for showcasing microservices architecture with AI/ML integration in healthcare.
-
-## License
-
-[To be determined]
+- **Infrastructure:** AWS EKS, Terraform, Docker, ECR

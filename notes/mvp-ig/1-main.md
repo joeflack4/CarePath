@@ -6,12 +6,12 @@ This document is the high-level “outer loop” for the project. It explains **
 
 ## 1. Goals
 
-- [ ] Demonstrate backend microservices (Python + FastAPI)
-- [ ] Demonstrate MongoDB modeling and APIs for healthcare-like data
-- [ ] Demonstrate AI chat service using RAG over the Mongo API
-- [ ] Demonstrate vector DB (Pinecone) integration scaffold, for DB to be added later
-- [ ] Demonstrate EKS + Terraform deployment with CPU-based autoscaling
-- [ ] Define clear path for post-deploy improvements
+- [x] Demonstrate backend microservices (Python + FastAPI)
+- [x] Demonstrate MongoDB modeling and APIs for healthcare-like data
+- [x] Demonstrate AI chat service using RAG over the Mongo API
+- [x] Demonstrate vector DB (Pinecone) integration scaffold, for DB to be added later
+- [x] Demonstrate EKS + Terraform deployment with CPU-based autoscaling
+- [x] Define clear path for post-deploy improvements
 
 ---
 
@@ -28,22 +28,22 @@ The following docs have been created as a single multi-doc implementation guide.
 
 ## 3. High-Level Architecture
 
-- [ ] Use MongoDB Atlas in cloud (and local Mongo for development)
-- [ ] Implement `service_db_api`:
-  - [ ] Expose patient, encounter, claim, document, and chat_log endpoints
-  - [ ] Use shapes from `data-snippets.md`
-- [ ] Implement `service_chat`:
-  - [ ] Provide `/triage` POST endpoint
-  - [ ] Call `service_db_api` over HTTP to fetch **patient summary**
-  - [ ] Use mock LLM in MVP
-  - [ ] Include mock vector store + Pinecone scaffolding
-  - [ ] Include PHI scrub placeholder
-  - [ ] Include simple tracing with trace IDs
-- [ ] Implement Infra (EKS via Terraform):
-  - [ ] Two Deployments: `db-api` and `chat-api`
-  - [ ] HPA on CPU (target ~60%)
-  - [ ] ECR repos per service
-  - [ ] S3 + DynamoDB backend for Terraform state
+- [x] Use MongoDB Atlas in cloud (and local Mongo for development)
+- [x] Implement `service_db_api`:
+  - [x] Expose patient, encounter, claim, document, and chat_log endpoints
+  - [x] Use shapes from `data-snippets.md`
+- [x] Implement `service_chat`:
+  - [x] Provide `/triage` POST endpoint
+  - [x] Call `service_db_api` over HTTP to fetch **patient summary**
+  - [x] Use mock LLM in MVP
+  - [x] Include mock vector store + Pinecone scaffolding
+  - [x] Include PHI scrub placeholder
+  - [x] Include simple tracing with trace IDs
+- [x] Implement Infra (EKS via Terraform):
+  - [x] Two Deployments: `db-api` and `chat-api`
+  - [x] HPA on CPU (target ~60%)
+  - [x] ECR repos per service
+  - [x] S3 + DynamoDB backend for Terraform state
 
 ---
 
@@ -83,54 +83,58 @@ The following docs have been created as a single multi-doc implementation guide.
   - [ ] Smoke-test `/triage` endpoint in cluster
 
 - [ ] Phase 6 – Post-deploy improvements
-  - [ ] Work items tracked in `5-post-deploy-improvements.md`
+  - [x] Work items tracked in `5-post-deploy-improvements.md`
   - [ ] Gradually enable Pinecone, real LLM, async ingestion, richer tracing
+    - [x] Phase 1: Real LLM (Qwen3-4B-Thinking-2507) implemented
+    - [ ] Phase 2: Observability & Monitoring
+    - [ ] Phase 3: Load Testing
+    - [ ] Additional phases per `5-post-deploy-improvements.md`
 
 ---
 
 ## 5. Top-Level Makefile Overview
 
-- [ ] Dev targets
-  - [ ] `make install-db-api` – install deps for `service_db_api`
-  - [ ] `make install-chat` – install deps for `service_chat`
-  - [ ] `make run-db-api` – run db API locally with uvicorn
-  - [ ] `make run-chat` – run chat API locally with uvicorn
-  - [ ] `make load-synthetic` – run Mongo synthetic data loader
+- [x] Dev targets
+  - [x] `make install-db-api` – install deps for `service_db_api`
+  - [x] `make install-chat` – install deps for `service_chat`
+  - [x] `make run-db-api` – run db API locally with uvicorn
+  - [x] `make run-chat` – run chat API locally with uvicorn
+  - [x] `make load-synthetic` – run Mongo synthetic data loader
 
-- [ ] Docker / Build targets
-  - [ ] `make docker-build-db-api`
-  - [ ] `make docker-build-chat`
-  - [ ] `make docker-push-db-api`
-  - [ ] `make docker-push-chat`
+- [x] Docker / Build targets
+  - [x] `make docker-build-db-api`
+  - [x] `make docker-build-chat`
+  - [x] `make docker-push-db-api`
+  - [x] `make docker-push-chat`
 
-- [ ] Infra targets
-  - [ ] `make tf-init`
-  - [ ] `make tf-plan`
-  - [ ] `make tf-apply`
-  - [ ] `make tf-destroy`
+- [x] Infra targets
+  - [x] `make tf-init`
+  - [x] `make tf-plan`
+  - [x] `make tf-apply`
+  - [x] `make tf-destroy`
 
-- [ ] Deploy targets
-  - [ ] `make deploy-db-api`
-  - [ ] `make deploy-chat`
-  - [ ] `make deploy-all`
+- [x] Deploy targets
+  - [x] `make deploy-db-api`
+  - [x] `make deploy-chat`
+  - [x] `make deploy-all`
 
 ---
 
 ## 6. Validation Checklist
 
-- [ ] `service_db_api`:
-  - [ ] Endpoints return data aligned with `data-snippets.md`
-  - [ ] `/patients/{mrn}/summary` aggregates patients, encounters, claims, documents
+- [x] `service_db_api`:
+  - [x] Endpoints return data aligned with `data-snippets.md`
+  - [x] `/patients/{mrn}/summary` aggregates patients, encounters, claims, documents
 
-- [ ] `service_chat`:
-  - [ ] `/triage` accepts `patient_mrn` and `query`
-  - [ ] `/triage` calls `service_db_api` patient summary endpoint
-  - [ ] `/triage` uses mock LLM and returns a structured JSON payload
-  - [ ] `/triage` logs a trace ID per request
+- [x] `service_chat`:
+  - [x] `/triage` accepts `patient_mrn` and `query`
+  - [x] `/triage` calls `service_db_api` patient summary endpoint
+  - [x] `/triage` uses mock LLM and returns a structured JSON payload
+  - [x] `/triage` logs a trace ID per request
 
-- [ ] Infra:
-  - [ ] EKS cluster running with both Deployments healthy
-  - [ ] HPA objects exist and can scale pods based on CPU
+- [x] Infra:
+  - [x] EKS cluster running with both Deployments healthy
+  - [x] HPA objects exist and can scale pods based on CPU
 
-- [ ] Demo readiness:
-  - [ ] Simple runbook describing curl or HTTP sequence for demo
+- [x] Demo readiness:
+  - [x] Simple runbook describing curl or HTTP sequence for demo

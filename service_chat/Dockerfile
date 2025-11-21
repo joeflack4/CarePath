@@ -16,11 +16,30 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
+# Build argument to control model download during build
+ARG DOWNLOAD_MODEL=false
+ARG HUGGINGFACE_TOKEN=""
+
+# Create model cache directory
+RUN mkdir -p /app/models
+
+# Optionally download model during build (set DOWNLOAD_MODEL=true to enable)
+# This will embed the model in the image, increasing image size but reducing startup time
+RUN if [ "$DOWNLOAD_MODEL" = "true" ]; then \
+        echo "Downloading model during build..."; \
+        HUGGINGFACE_TOKEN="$HUGGINGFACE_TOKEN" \
+        MODEL_CACHE_DIR=/app/models \
+        python -c "from service_chat.services.model_manager import download_model_if_needed; download_model_if_needed()"; \
+    else \
+        echo "Skipping model download during build. Model will be downloaded on first use."; \
+    fi
+
 # Expose port
 EXPOSE 8002
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
+ENV MODEL_CACHE_DIR=/app/models
 
 # Run the application
 CMD ["uvicorn", "service_chat.main:app", "--host", "0.0.0.0", "--port", "8002"]

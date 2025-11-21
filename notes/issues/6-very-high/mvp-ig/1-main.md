@@ -59,8 +59,8 @@ The following docs have been created as a single multi-doc implementation guide.
   - [x] Implement Mongo client and models
   - [x] Implement core routers (patients, encounters, claims, documents)
   - [x] Implement synthetic data scripts
-  - [ ] Verify `/health` and `/patients` endpoints (requires MongoDB)
-  - [ ] Verify `/patients/{mrn}/summary` endpoint (requires MongoDB)
+  - [x] Verify `/health` and `/patients` endpoints (requires MongoDB)
+  - [x] Verify `/patients/{mrn}/summary` endpoint (requires MongoDB)
 
 - [x] Phase 3 – Implement `service_chat` (AI service)
   - [x] Implement FastAPI skeleton with `/triage` and `/health`
@@ -68,7 +68,7 @@ The following docs have been created as a single multi-doc implementation guide.
   - [x] Implement mock LLM
   - [x] Implement PHI scrub placeholder
   - [x] Implement simple tracing
-  - [ ] Verify `/triage` uses patient summary and mock LLM (requires both services running)
+  - [x] Verify `/triage` uses patient summary and mock LLM (requires both services running)
 
 - [x] Phase 4 – Docker + Terraform (infra)
   - [x] Create Dockerfiles for both services

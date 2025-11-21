@@ -227,7 +227,7 @@ For now, just use the same snippets in `data-snippets.md`, or something close to
 - [x] Implement `make run-db-api`:
   - [x] Command like: `uvicorn service_db_api.main:app --reload --port 8001`
 
-- [ ] Verify manually (requires MongoDB running):
-  - [ ] `GET http://localhost:8001/health`
-  - [ ] `GET http://localhost:8001/patients`
-  - [ ] `GET http://localhost:8001/patients/P000123/summary`
+- [x] Verify manually (requires MongoDB running):
+  - [x] `GET http://localhost:8001/health`
+  - [x] `GET http://localhost:8001/patients`
+  - [x] `GET http://localhost:8001/patients/P000123/summary`

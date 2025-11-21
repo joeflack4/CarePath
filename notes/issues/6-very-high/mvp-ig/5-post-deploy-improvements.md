@@ -2,6 +2,8 @@
 
 Once the initial MVP is deployed and stable, use this document to track incremental upgrades toward a more production-like system.
 
+**Important** - note that these sections have all been moved to separate files. Don't consult this list for further work; consult those instead.
+
 ---
 
 ## 1. Real LLM (Qwen3-4B-Thinking-2507, CPU)

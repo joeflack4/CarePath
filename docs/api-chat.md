@@ -288,4 +288,4 @@ For production deployments with real LLM:
 
 - **[Database API Documentation](api-db.md)** - Data endpoints used by this service
 - **[Model Management](models.md)** - How to configure and deploy LLM models
-- **[AI Service Upgrade Guide](../notes/ai-service-upgrade.md)** - Deploying with real LLM
+- **[AI Service Upgrade Guide](../notes/issues/6-very-high/ai-service-upgrade.md)** - Deploying with real LLM

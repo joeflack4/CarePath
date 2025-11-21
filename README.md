@@ -145,8 +145,8 @@ See `notes/mvp-ig/` for detailed implementation guides.
 
 - **[Model Management](docs/models.md)** - How to download, deploy, and manage LLM models
 - **[Infrastructure Guide](infra/terraform/README.md)** - Terraform setup and deployment instructions
-- **[Deployment Options](notes/rollout-options.md)** - Different strategies for deploying services
-- **[AI Service Upgrade](notes/ai-service-upgrade.md)** - Step-by-step guide for deploying Qwen LLM
+- **[Deployment Options](docs/rollout-options.md)** - Different strategies for deploying services
+- **[AI Service Upgrade](notes/issues/6-very-high/ai-service-upgrade.md)** - Step-by-step guide for deploying Qwen LLM
 
 ## Makefile Command summary
 

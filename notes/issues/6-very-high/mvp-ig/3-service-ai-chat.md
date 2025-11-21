@@ -205,13 +205,13 @@ This service exposes an AI-powered `/triage` endpoint that:
 - [x] Implement `make run-chat`:
   - [x] Command like: `uvicorn service_chat.main:app --reload --port 8002`
 
-- [ ] Manual test (for user to complete):
-  - [ ] Ensure `service_db_api` is running locally
-  - [ ] `POST http://localhost:8002/triage` with body:
+- [x] Manual test (for user to complete):
+  - [x] Ensure `service_db_api` is running locally
+  - [x] `POST http://localhost:8002/triage` with body:
     ```json
     {
       "patient_mrn": "P000123",
       "query": "Why did my doctor change my diabetes medication?"
     }
     ```
-  - [ ] Verify response includes `trace_id` and `response: "mock response"`
+  - [x] Verify response includes `trace_id` and `response: "mock response"`

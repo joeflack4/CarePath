@@ -25,21 +25,21 @@ response) is persisted to MongoDB and retrievable via the DB API.
 
 ## 1. DB API: Add POST Endpoint for Chat Logs
 
-- [ ] In `service_db_api/routers/chat_logs.py`:
-  - [ ] Create Pydantic models for chat log creation:
-    - [ ] `MessageCreate` model (role, content, timestamp, model_name?, latency_ms?)
-    - [ ] `RetrievalEventCreate` model (step_id, query_type, query, results, latency_ms)
-    - [ ] `ChatLogCreate` model (patient_mrn, channel, messages, retrieval_events, trace_id)
-  - [ ] Add `POST /chat-logs` endpoint:
-    - [ ] Accept `ChatLogCreate` body
-    - [ ] Auto-generate `conversation_id` if not provided (format: `CONV-{date}-{patient_mrn}-{uuid_short}`)
-    - [ ] Auto-set `started_at` and `ended_at` timestamps
-    - [ ] Insert into MongoDB `chat_logs` collection
-    - [ ] Return created chat log with `_id` and `conversation_id`
+- [x] In `service_db_api/routers/chat_logs.py`:
+  - [x] Create Pydantic models for chat log creation:
+    - [x] `MessageCreate` model (role, content, timestamp, model_name?, latency_ms?)
+    - [x] `RetrievalEventCreate` model (step_id, query_type, query, results, latency_ms)
+    - [x] `ChatLogCreate` model (patient_mrn, channel, messages, retrieval_events, trace_id)
+  - [x] Add `POST /chat-logs` endpoint:
+    - [x] Accept `ChatLogCreate` body
+    - [x] Auto-generate `conversation_id` if not provided (format: `CONV-{date}-{patient_mrn}-{uuid_short}`)
+    - [x] Auto-set `started_at` and `ended_at` timestamps
+    - [x] Insert into MongoDB `chat_logs` collection
+    - [x] Return created chat log with `_id` and `conversation_id`
 
-- [ ] In `service_db_api/models/` (if separate models file exists):
-  - [ ] Ensure chat log models match the synthetic data schema
-  - [ ] Support both FTS-style and simple DB query retrieval events
+- [x] In `service_db_api/models/` (if separate models file exists):
+  - [x] Ensure chat log models match the synthetic data schema
+  - [x] Support both FTS-style and simple DB query retrieval events
 
 ---
 
@@ -47,12 +47,12 @@ response) is persisted to MongoDB and retrievable via the DB API.
 
 The current synthetic data shows FTS-style retrieval. We need to support simpler DB queries too.
 
-- [ ] Define `query_type` field in retrieval events:
-  - [ ] `"db_query"` - Simple database query (e.g., fetch patient by MRN)
-  - [ ] `"fts"` - Full-text search (future)
-  - [ ] `"vector"` - Vector/embedding search (future, Pinecone)
+- [x] Define `query_type` field in retrieval events:
+  - [x] `"db_query"` - Simple database query (e.g., fetch patient by MRN)
+  - [x] `"fts"` - Full-text search (future)
+  - [x] `"vector"` - Vector/embedding search (future, Pinecone)
 
-- [ ] Update `RetrievalEventCreate` model to support both types:
+- [x] Update `RetrievalEventCreate` model to support both types:
   ```python
   class RetrievalEventCreate(BaseModel):
       step_id: int
@@ -70,40 +70,40 @@ The current synthetic data shows FTS-style retrieval. We need to support simpler
 
 ## 3. Chat Service: Store Interactions After Triage
 
-- [ ] In `service_chat/services/`:
-  - [ ] Create `chat_log_client.py`:
-    - [ ] `async def store_chat_log(chat_log_data: dict) -> dict`
-    - [ ] POST to `{DB_API_BASE_URL}/chat-logs`
-    - [ ] Handle errors gracefully (log but don't fail the triage response)
+- [x] In `service_chat/services/`:
+  - [x] Create `chat_log_client.py`:
+    - [x] `async def store_chat_log(chat_log_data: dict) -> dict`
+    - [x] POST to `{DB_API_BASE_URL}/chat-logs`
+    - [x] Handle errors gracefully (log but don't fail the triage response)
 
-- [ ] In `service_chat/routers/triage.py`:
-  - [ ] After successful LLM response, build chat log payload:
-    - [ ] `patient_mrn`: from request
-    - [ ] `trace_id`: from tracing
-    - [ ] `channel`: "api" (or configurable)
-    - [ ] `messages`: array with user query and assistant response
-    - [ ] `retrieval_events`: record the patient summary fetch
-  - [ ] Call `chat_log_client.store_chat_log()` to persist
-  - [ ] Include `conversation_id` in the triage response
+- [x] In `service_chat/routers/triage.py`:
+  - [x] After successful LLM response, build chat log payload:
+    - [x] `patient_mrn`: from request
+    - [x] `trace_id`: from tracing
+    - [x] `channel`: "api" (or configurable)
+    - [x] `messages`: array with user query and assistant response
+    - [x] `retrieval_events`: record the patient summary fetch
+  - [x] Call `chat_log_client.store_chat_log()` to persist
+  - [x] Include `conversation_id` in the triage response
 
-- [ ] Update `TriageResponse` model:
-  - [ ] Add `conversation_id: str` field
+- [x] Update `TriageResponse` model:
+  - [x] Add `conversation_id: str` field
 
 ---
 
 ## 4. Track Retrieval Events in Triage Flow
 
-- [ ] In `service_chat/routers/triage.py`:
-  - [ ] Create a list to accumulate retrieval events during the request
-  - [ ] When fetching patient summary:
-    - [ ] Record retrieval event with:
+- [x] In `service_chat/routers/triage.py`:
+  - [x] Create a list to accumulate retrieval events during the request
+  - [x] When fetching patient summary:
+    - [x] Record retrieval event with:
       - `query_type`: "db_query"
       - `query`: "Fetch patient summary by MRN"
       - `endpoint`: "/patients/{mrn}/summary"
       - `latency_ms`: elapsed time
       - `record_count`: 1 (or count of returned data)
   - [ ] (Future) When doing vector search, add retrieval event with `query_type`: "vector"
-  - [ ] Include all retrieval events in the chat log payload
+  - [x] Include all retrieval events in the chat log payload
 
 ---
 
@@ -123,26 +123,26 @@ The current synthetic data shows FTS-style retrieval. We need to support simpler
 
 ## 6. Update API Documentation
 
-- [ ] In `docs/api-db.md`:
-  - [ ] Add documentation for `POST /chat-logs` endpoint
-  - [ ] Include request body schema
-  - [ ] Include example curl command
-  - [ ] Document the `query_type` values for retrieval events
+- [x] In `docs/api-db.md`:
+  - [x] Add documentation for `POST /chat-logs` endpoint
+  - [x] Include request body schema
+  - [x] Include example curl command
+  - [x] Document the `query_type` values for retrieval events
 
-- [ ] In `docs/api-chat.md`:
-  - [ ] Update `/triage` response to include `conversation_id`
-  - [ ] Note that interactions are automatically stored
-  - [ ] Show how to retrieve the chat log after a triage request
+- [x] In `docs/api-chat.md`:
+  - [x] Update `/triage` response to include `conversation_id`
+  - [x] Note that interactions are automatically stored
+  - [x] Show how to retrieve the chat log after a triage request
 
 ---
 
 ## 7. Testing
 
-- [ ] Local testing:
-  - [ ] Start both services locally
-  - [ ] Make a `/triage` request
-  - [ ] Verify chat log was created via `GET /chat-logs`
-  - [ ] Verify the retrieval event shows the patient summary fetch
+- [x] Local testing:
+  - [x] Start both services locally
+  - [x] Make a `/triage` request
+  - [x] Verify chat log was created via `GET /chat-logs`
+  - [x] Verify the retrieval event shows the patient summary fetch
 
 - [ ] Add Makefile target for verifying chat log storage:
   - [ ] `make test-chat-log-storage` or integrate into `make test-triage`
@@ -154,18 +154,18 @@ The current synthetic data shows FTS-style retrieval. We need to support simpler
 
 ## 8. Edge Cases and Error Handling
 
-- [ ] Handle chat log storage failures gracefully:
-  - [ ] If POST to `/chat-logs` fails, log the error but still return triage response
-  - [ ] User should get their answer even if logging fails
+- [x] Handle chat log storage failures gracefully:
+  - [x] If POST to `/chat-logs` fails, log the error but still return triage response
+  - [x] User should get their answer even if logging fails
   - [ ] Consider retry logic or async queue (future enhancement)
 
-- [ ] Handle missing patient gracefully:
-  - [ ] If patient not found, don't create a chat log (or create with error status?)
-  - [ ] Current behavior: return 404, no chat log created
+- [x] Handle missing patient gracefully:
+  - [x] If patient not found, don't create a chat log (or create with error status?)
+  - [x] Current behavior: return 404, no chat log created
 
-- [ ] Validate chat log data before storage:
-  - [ ] Ensure messages array is not empty
-  - [ ] Ensure timestamps are valid ISO format
+- [x] Validate chat log data before storage:
+  - [x] Ensure messages array is not empty
+  - [x] Ensure timestamps are valid ISO format
 
 ---
 

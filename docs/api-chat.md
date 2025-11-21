@@ -66,7 +66,8 @@ curl -X POST http://localhost:8002/triage \
   "response": "This is a mock response from the AI assistant. In production, this would be replaced with a real LLM response.",
   "trace_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
   "patient_mrn": "P000123",
-  "llm_mode": "mock"
+  "llm_mode": "mock",
+  "conversation_id": "CONV-2024-01-20-P000123-a1b2c3d4"
 }
 ```
 
@@ -76,7 +77,8 @@ curl -X POST http://localhost:8002/triage \
   "response": "Based on your medical records, I can see that your doctor changed your diabetes medication during your visit on January 15, 2024. Your recent HbA1c test showed a level of 7.2%, which indicates your diabetes is reasonably well controlled. However, the medication change from Metformin 500mg to Metformin 850mg was likely made to achieve even better blood sugar control and bring your HbA1c closer to the target range of below 7%. This adjustment is a common practice when patients are tolerating their current medication well but could benefit from slightly more aggressive management. If you have concerns about this change or experience any side effects, I recommend discussing them with Dr. Sarah Chen at your next appointment.",
   "trace_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
   "patient_mrn": "P000123",
-  "llm_mode": "Qwen3-4B-Thinking-2507"
+  "llm_mode": "Qwen3-4B-Thinking-2507",
+  "conversation_id": "CONV-2024-01-20-P000123-b2c3d4e5"
 }
 ```
 
@@ -128,6 +130,7 @@ print(f"Trace ID: {data['trace_id']}")
 | `trace_id` | string | Unique identifier for request tracing and debugging |
 | `patient_mrn` | string | Echo of the patient MRN from the request |
 | `llm_mode` | string | The LLM mode used (`mock` or `Qwen3-4B-Thinking-2507`) |
+| `conversation_id` | string | ID of the stored chat log (can be used to retrieve the interaction via `GET /chat-logs/{conversation_id}`) |
 
 ---
 
@@ -206,7 +209,28 @@ When the chat service cannot reach the database API.
 5. **LLM Response Generated**:
    - **Mock mode**: Returns a placeholder response (fast, for testing)
    - **Qwen mode**: Generates a real response using the Qwen3-4B model (slower, ~5-15s on CPU)
-6. **Response Returned**: The AI response is returned with trace ID for debugging
+6. **Chat Log Stored**: The interaction (query + response + retrieval events) is stored to MongoDB
+7. **Response Returned**: The AI response is returned with trace ID and conversation ID
+
+---
+
+## Retrieving Chat Logs
+
+After a triage request, you can retrieve the stored chat log using the `conversation_id`:
+
+```bash
+# Get the specific chat log
+curl http://localhost:8001/chat-logs/CONV-2024-01-20-P000123-a1b2c3d4
+
+# List all chat logs for a patient
+curl "http://localhost:8001/chat-logs?patient_mrn=P000123"
+```
+
+The chat log includes:
+- The user query and AI response
+- Retrieval events (what data was fetched to answer the query)
+- Timestamps and latency metrics
+- Trace ID for debugging
 
 ---
 

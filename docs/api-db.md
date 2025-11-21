@@ -379,6 +379,90 @@ curl "http://localhost:8001/documents?patient_mrn=P000123&doc_type=lab_result"
 
 ## Chat Log Endpoints
 
+### POST /chat-logs
+
+Create a new chat log entry. This endpoint is used by the chat service to store triage interactions.
+
+**Request Body:**
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `patient_mrn` | string | Yes | Patient's medical record number |
+| `channel` | string | No | Channel identifier (default: "api") |
+| `messages` | array | Yes | Array of message objects |
+| `retrieval_events` | array | No | Array of retrieval event objects |
+| `trace_id` | string | No | Trace ID for request correlation |
+| `conversation_id` | string | No | Custom conversation ID (auto-generated if not provided) |
+
+**Message Object:**
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `role` | string | Yes | "user" or "assistant" |
+| `content` | string | Yes | Message content |
+| `timestamp` | string | No | ISO timestamp (auto-set if not provided) |
+| `model_name` | string | No | LLM model name (for assistant messages) |
+| `latency_ms` | float | No | Response latency (for assistant messages) |
+
+**Retrieval Event Object:**
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `step_id` | int | Yes | Sequential step number |
+| `query_type` | string | Yes | "db_query", "fts", or "vector" |
+| `query` | string | Yes | Description or actual query |
+| `endpoint` | string | No | API endpoint called |
+| `latency_ms` | float | No | Query latency |
+| `results` | array | No | For FTS/vector search results |
+| `record_count` | int | No | For db_query result counts |
+
+**Request:**
+```bash
+curl -X POST http://localhost:8001/chat-logs \
+  -H "Content-Type: application/json" \
+  -d '{
+    "patient_mrn": "P000123",
+    "channel": "api",
+    "messages": [
+      {
+        "role": "user",
+        "content": "What are my current medications?"
+      },
+      {
+        "role": "assistant",
+        "content": "Based on your records, you are currently taking Metformin 500mg twice daily.",
+        "model_name": "mock",
+        "latency_ms": 150
+      }
+    ],
+    "retrieval_events": [
+      {
+        "step_id": 1,
+        "query_type": "db_query",
+        "query": "Fetch patient summary by MRN",
+        "endpoint": "/patients/P000123/summary",
+        "latency_ms": 45.2,
+        "record_count": 1
+      }
+    ],
+    "trace_id": "abc123-def456"
+  }'
+```
+
+**Response (201 Created):**
+```json
+{
+  "_id": "683d8f1e2a4b5c6d7e8f9a10",
+  "conversation_id": "CONV-2024-01-20-P000123-a1b2c3d4",
+  "patient_mrn": "P000123",
+  "channel": "api",
+  "started_at": "2024-01-20T14:30:00.000Z",
+  "ended_at": "2024-01-20T14:30:00.000Z",
+  "messages": [...],
+  "retrieval_events": [...],
+  "trace_id": "abc123-def456"
+}
+```
+
+---
+
 ### GET /chat-logs
 
 List chat conversation logs with optional filtering.

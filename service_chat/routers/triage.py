@@ -1,5 +1,7 @@
 """Triage endpoint for AI-powered patient assistance."""
 import time
+from datetime import datetime
+from typing import Optional, List, Dict, Any
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
@@ -7,6 +9,7 @@ from service_chat.config import settings
 from service_chat.tracing import start_trace, log_span
 from service_chat.scrub_phi import scrub
 from service_chat.services import db_client, llm_client, rag_service
+from service_chat.services import chat_log_client
 
 router = APIRouter()
 
@@ -24,6 +27,7 @@ class TriageResponse(BaseModel):
     query: str
     llm_mode: str
     response: str
+    conversation_id: Optional[str] = None  # ID of stored chat log
 
 
 @router.post("/triage", response_model=TriageResponse)
@@ -50,6 +54,9 @@ async def triage(request: TriageRequest):
 
     # Scrub PHI before logging (MVP: no-op, but structure is in place)
     scrubbed_request = scrub(request.dict())
+
+    # Track retrieval events during this request
+    retrieval_events: List[Dict[str, Any]] = []
 
     try:
         # Fetch patient summary from DB API
@@ -95,6 +102,16 @@ async def triage(request: TriageRequest):
             elapsed_ms=db_elapsed_ms
         )
 
+        # Record the retrieval event for patient summary fetch
+        retrieval_events.append({
+            "step_id": 1,
+            "query_type": "db_query",
+            "query": "Fetch patient summary by MRN",
+            "endpoint": f"/patients/{request.patient_mrn}/summary",
+            "latency_ms": db_elapsed_ms,
+            "record_count": 1
+        })
+
         # Build prompt using RAG service
         prompt = rag_service.build_prompt(request.query, patient_summary)
 
@@ -130,6 +147,35 @@ async def triage(request: TriageRequest):
             elapsed_ms=llm_elapsed_ms
         )
 
+        # Build messages for chat log storage
+        now = datetime.utcnow().isoformat() + "Z"
+        messages = [
+            {
+                "role": "user",
+                "content": request.query,
+                "timestamp": now
+            },
+            {
+                "role": "assistant",
+                "content": llm_response,
+                "timestamp": now,
+                "model_name": settings.LLM_MODE,
+                "latency_ms": llm_elapsed_ms
+            }
+        ]
+
+        # Store chat log (non-blocking, errors are logged but don't fail the request)
+        log_span(trace_id, "chat_log_storage_start")
+        chat_log_result = await chat_log_client.store_chat_log(
+            patient_mrn=request.patient_mrn,
+            messages=messages,
+            retrieval_events=retrieval_events,
+            trace_id=trace_id,
+            channel="api"
+        )
+        conversation_id = chat_log_result.get("conversation_id") if chat_log_result else None
+        log_span(trace_id, "chat_log_storage_end", conversation_id=conversation_id)
+
         # Log completion
         log_span(trace_id, "request_completed")
 
@@ -138,7 +184,8 @@ async def triage(request: TriageRequest):
             patient_mrn=request.patient_mrn,
             query=request.query,
             llm_mode=settings.LLM_MODE,
-            response=llm_response
+            response=llm_response,
+            conversation_id=conversation_id
         )
 
     except HTTPException:

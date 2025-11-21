@@ -78,3 +78,9 @@ test/_infra/test_genonaut_api.sqlite3
 
 # Infra
 celerybeat-schedule.db
+*.tfvars
+!*.tfvars.example
+.terraform/
+*.tfstate
+*.tfstate.backup
+backend.hcl

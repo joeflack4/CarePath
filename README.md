@@ -143,9 +143,10 @@ See `notes/mvp-ig/` for detailed implementation guides.
 
 ## Documentation
 
+- **[Deployment Guide](docs/deploy.md)** - Complete guide to deploying CarePath to AWS EKS
+- **[Deployment Options](docs/deploy-rollout-options.md)** - Different strategies for deploying services
 - **[Model Management](docs/models.md)** - How to download, deploy, and manage LLM models
 - **[Infrastructure Guide](infra/terraform/README.md)** - Terraform setup and deployment instructions
-- **[Deployment Options](docs/rollout-options.md)** - Different strategies for deploying services
 - **[AI Service Upgrade](notes/issues/6-very-high/ai-service-upgrade.md)** - Step-by-step guide for deploying Qwen LLM
 
 ## Makefile Command summary

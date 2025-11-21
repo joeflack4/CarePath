@@ -36,30 +36,13 @@ module "eks" {
   node_desired_size   = var.node_desired_size
   node_min_size       = var.node_min_size
   node_max_size       = var.node_max_size
+  node_capacity_type  = var.node_capacity_type
 
   depends_on = [module.network]
 }
 
-# MongoDB Atlas Module
-module "mongo_atlas" {
-  source = "../../modules/mongo_atlas"
-
-  org_id       = var.mongodb_atlas_org_id
-  project_name = "${var.name_prefix}-project"
-  cluster_name = "${var.name_prefix}-cluster"
-  aws_region   = var.aws_region
-
-  instance_size    = var.mongodb_instance_size
-  mongodb_version  = var.mongodb_version
-  backup_enabled   = var.mongodb_backup_enabled
-
-  db_username     = var.mongodb_username
-  db_password     = var.mongodb_password
-  database_name   = var.mongodb_database_name
-
-  environment         = var.environment
-  allow_all_ips       = var.mongodb_allow_all_ips
-}
+# MongoDB: Using existing Atlas cluster via mongodb_uri variable
+# No Terraform-managed Atlas resources needed
 
 # App Module (Kubernetes Resources)
 module "app" {
@@ -68,13 +51,13 @@ module "app" {
   namespace   = var.app_namespace
   environment = var.environment
 
-  # MongoDB Configuration
-  mongodb_connection_string = module.mongo_atlas.connection_string
+  # MongoDB Configuration (uses existing Atlas cluster)
+  mongodb_connection_string = var.mongodb_uri
   mongodb_db_name           = var.mongodb_database_name
 
-  # Docker Images
-  db_api_image   = var.db_api_image
-  chat_api_image = var.chat_api_image
+  # Docker Images - use ECR repository URLs with :latest tag
+  db_api_image   = "${module.ecr.db_api_repo_url}:latest"
+  chat_api_image = "${module.ecr.chat_api_repo_url}:latest"
 
   # Replica Configuration
   db_api_replicas  = var.db_api_replicas
@@ -90,5 +73,5 @@ module "app" {
   vector_mode = var.vector_mode
   log_level   = var.log_level
 
-  depends_on = [module.eks, module.mongo_atlas]
+  depends_on = [module.eks]
 }

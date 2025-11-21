@@ -49,3 +49,9 @@ variable "node_max_size" {
   type        = number
   default     = 6
 }
+
+variable "node_capacity_type" {
+  description = "Capacity type for worker nodes: ON_DEMAND or SPOT"
+  type        = string
+  default     = "ON_DEMAND"
+}

@@ -43,12 +43,6 @@ output "eks_cluster_id" {
   value       = module.eks.cluster_id
 }
 
-# MongoDB Outputs
-output "mongodb_cluster_name" {
-  description = "MongoDB Atlas cluster name"
-  value       = module.mongo_atlas.cluster_name
-}
-
 # App Outputs
 output "app_namespace" {
   description = "Kubernetes namespace"

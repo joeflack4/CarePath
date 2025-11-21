@@ -41,7 +41,7 @@ variable "cluster_name" {
 variable "cluster_version" {
   description = "Kubernetes version"
   type        = string
-  default     = "1.28"
+  default     = "1.29"
 }
 
 variable "node_instance_types" {
@@ -53,64 +53,30 @@ variable "node_instance_types" {
 variable "node_desired_size" {
   description = "Desired number of worker nodes"
   type        = number
-  default     = 3
+  default     = 1
 }
 
 variable "node_min_size" {
   description = "Minimum number of worker nodes"
   type        = number
-  default     = 3
+  default     = 1
 }
 
 variable "node_max_size" {
   description = "Maximum number of worker nodes"
   type        = number
-  default     = 6
+  default     = 3
 }
 
-# MongoDB Atlas Configuration
-variable "mongodb_atlas_org_id" {
-  description = "MongoDB Atlas organization ID"
+variable "node_capacity_type" {
+  description = "Capacity type for worker nodes: ON_DEMAND or SPOT (SPOT is cheaper and uses different quota)"
   type        = string
+  default     = "ON_DEMAND"
 }
 
-variable "mongodb_atlas_public_key" {
-  description = "MongoDB Atlas API public key"
-  type        = string
-}
-
-variable "mongodb_atlas_private_key" {
-  description = "MongoDB Atlas API private key"
-  type        = string
-  sensitive   = true
-}
-
-variable "mongodb_instance_size" {
-  description = "MongoDB Atlas instance size"
-  type        = string
-  default     = "M10"
-}
-
-variable "mongodb_version" {
-  description = "MongoDB version"
-  type        = string
-  default     = "7.0"
-}
-
-variable "mongodb_backup_enabled" {
-  description = "Enable MongoDB backups"
-  type        = bool
-  default     = true
-}
-
-variable "mongodb_username" {
-  description = "MongoDB database username"
-  type        = string
-  default     = "carepath_admin"
-}
-
-variable "mongodb_password" {
-  description = "MongoDB database password"
+# MongoDB Configuration (using existing Atlas cluster)
+variable "mongodb_uri" {
+  description = "MongoDB connection URI for existing Atlas cluster"
   type        = string
   sensitive   = true
 }
@@ -119,12 +85,6 @@ variable "mongodb_database_name" {
   description = "MongoDB database name"
   type        = string
   default     = "carepath"
-}
-
-variable "mongodb_allow_all_ips" {
-  description = "Allow all IPs to access MongoDB (demo only)"
-  type        = bool
-  default     = true
 }
 
 # Application Configuration
@@ -149,26 +109,26 @@ variable "chat_api_image" {
 variable "db_api_replicas" {
   description = "Number of db-api replicas"
   type        = number
-  default     = 3
+  default     = 1
 }
 
 variable "chat_api_replicas" {
   description = "Number of chat-api replicas"
   type        = number
-  default     = 3
+  default     = 1
 }
 
 # HPA Configuration
 variable "hpa_min_replicas" {
   description = "Minimum replicas for HPA"
   type        = number
-  default     = 3
+  default     = 1
 }
 
 variable "hpa_max_replicas" {
   description = "Maximum replicas for HPA"
   type        = number
-  default     = 6
+  default     = 3
 }
 
 variable "hpa_target_cpu_utilization" {

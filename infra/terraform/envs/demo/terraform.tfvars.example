@@ -4,13 +4,15 @@
 environment = "demo"
 aws_region  = "us-east-1"
 
-# MongoDB Atlas Configuration
-mongodb_atlas_org_id      = "your-mongodb-atlas-org-id"
-mongodb_atlas_public_key  = "your-public-key"
-mongodb_atlas_private_key = "your-private-key"
-mongodb_username          = "carepath_admin"
-mongodb_password          = "CHANGE_ME_SECURE_PASSWORD"
+# =============================================================================
+# MongoDB Configuration (using existing Atlas cluster)
+# =============================================================================
+mongodb_uri           = "mongodb+srv://user:password@your-cluster.mongodb.net/?retryWrites=true&w=majority"
+mongodb_database_name = "carepath"
 
+# =============================================================================
 # Docker Images (update after building and pushing to ECR)
-db_api_image   = "123456789012.dkr.ecr.us-east-1.amazonaws.com/carepath-db-api:latest"
-chat_api_image = "123456789012.dkr.ecr.us-east-1.amazonaws.com/carepath-chat-api:latest"
+# =============================================================================
+# These will be auto-populated after first terraform apply creates ECR repos
+# db_api_image   = "123456789012.dkr.ecr.us-east-1.amazonaws.com/carepath-db-api:latest"
+# chat_api_image = "123456789012.dkr.ecr.us-east-1.amazonaws.com/carepath-chat-api:latest"

@@ -13,21 +13,22 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
-COPY . .
-
-# Build argument to control model download during build
-ARG DOWNLOAD_MODEL=false
-ARG HUGGINGFACE_TOKEN=""
+# Copy application code into service_chat directory for proper module structure
+COPY . ./service_chat/
 
 # Create model cache directory
 RUN mkdir -p /app/models
 
-# Optionally download model during build (set DOWNLOAD_MODEL=true to enable)
-# This will embed the model in the image, increasing image size but reducing startup time
-RUN if [ "$DOWNLOAD_MODEL" = "true" ]; then \
+# Note: Model download at build time is disabled by default.
+# The model will be downloaded on first use at runtime.
+# To download during build, use Docker BuildKit secrets:
+#   docker build --secret id=hf_token,env=HUGGINGFACE_TOKEN \
+#     --build-arg DOWNLOAD_MODEL=true -t carepath-chat-api .
+ARG DOWNLOAD_MODEL=false
+RUN --mount=type=secret,id=hf_token,required=false \
+    if [ "$DOWNLOAD_MODEL" = "true" ]; then \
         echo "Downloading model during build..."; \
-        HUGGINGFACE_TOKEN="$HUGGINGFACE_TOKEN" \
+        export HUGGINGFACE_TOKEN=$(cat /run/secrets/hf_token 2>/dev/null || echo ""); \
         MODEL_CACHE_DIR=/app/models \
         python -c "from service_chat.services.model_manager import download_model_if_needed; download_model_if_needed()"; \
     else \

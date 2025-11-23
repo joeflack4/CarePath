@@ -74,3 +74,24 @@ output "kubectl_config_command" {
   description = "Command to configure kubectl"
   value       = "aws eks update-kubeconfig --region ${var.aws_region} --name ${module.eks.cluster_name}"
 }
+
+# Frontend Outputs
+output "frontend_bucket_name" {
+  description = "S3 bucket name for frontend"
+  value       = var.expose_frontend ? module.frontend[0].bucket_name : ""
+}
+
+output "frontend_url" {
+  description = "Frontend URL (CloudFront if enabled, otherwise S3 website)"
+  value       = var.expose_frontend ? module.frontend[0].frontend_url : ""
+}
+
+output "frontend_cloudfront_url" {
+  description = "CloudFront URL for frontend (HTTPS) - empty if CloudFront disabled"
+  value       = var.expose_frontend ? module.frontend[0].cloudfront_url : ""
+}
+
+output "frontend_cloudfront_distribution_id" {
+  description = "CloudFront distribution ID (for cache invalidation) - empty if CloudFront disabled"
+  value       = var.expose_frontend ? module.frontend[0].cloudfront_distribution_id : ""
+}

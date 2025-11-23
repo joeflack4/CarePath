@@ -144,6 +144,7 @@ See `notes/mvp-ig/` for detailed implementation guides.
 ## Documentation
 
 - **[Deployment Guide](docs/deploy.md)** - Complete guide to deploying CarePath to AWS EKS
+- **[Infrastructure Operations](docs/infra.md)** - Day-to-day operations for deployed infrastructure (logs, scaling, rollbacks)
 - **[Deployment Options](docs/deploy-rollout-options.md)** - Different strategies for deploying services
 - **[Model Management](docs/models.md)** - How to download, deploy, and manage LLM models
 - **[Infrastructure Guide](infra/terraform/README.md)** - Terraform setup and deployment instructions

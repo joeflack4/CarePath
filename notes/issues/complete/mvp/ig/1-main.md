@@ -76,13 +76,13 @@ The following docs have been created as a single multi-doc implementation guide.
   - [x] Configure HPA based on CPU
   - [x] Wire env vars and K8s Secrets/ConfigMaps
 
-- [ ] Phase 5 – Initial deploy
-  - [ ] Build & push images for both services
-  - [ ] Run `terraform apply` for demo environment
-  - [ ] Smoke-test `/health` endpoints
-  - [ ] Smoke-test `/triage` endpoint in cluster
+- [x] Phase 5 – Initial deploy
+  - [x] Build & push images for both services
+  - [x] Run `terraform apply` for demo environment
+  - [x] Smoke-test `/health` endpoints
+  - [x] Smoke-test `/triage` endpoint in cluster
 
-- [ ] Phase 6 – Post-deploy improvements
+- [ ] Phase 6 – Post-deploy improvements (postponed)
   - [x] Work items tracked in `5-post-deploy-improvements.md`
   - [ ] Gradually enable Pinecone, real LLM, async ingestion, richer tracing
     - [x] Phase 1: Real LLM (Qwen3-4B-Thinking-2507) implemented

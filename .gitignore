@@ -69,6 +69,7 @@ yarn-error.log*
 
 # LLM
 .claude/settings.local.json
+models/
 
 # Test
 playwright-report/

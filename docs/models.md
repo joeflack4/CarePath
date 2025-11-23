@@ -1,6 +1,7 @@
 # Model Management
 
-This document explains how CarePath AI manages Large Language Models (LLMs), including downloading, deploying, switching between models, and rollback procedures.
+This document explains how CarePath AI manages Large Language Models (LLMs), including downloading, deploying, switching 
+between models, and rollback procedures.
 
 ---
 

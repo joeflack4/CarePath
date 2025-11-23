@@ -78,3 +78,12 @@ module "app" {
 
   depends_on = [module.eks]
 }
+
+# Frontend Module (S3 + CloudFront)
+module "frontend" {
+  source = "../../modules/frontend"
+  count  = var.expose_frontend ? 1 : 0
+
+  bucket_name = var.frontend_bucket_name
+  environment = var.environment
+}

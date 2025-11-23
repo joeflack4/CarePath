@@ -34,7 +34,8 @@ resource "kubernetes_config_map" "app_config" {
 
   data = {
     MONGODB_DB_NAME     = var.mongodb_db_name
-    DB_API_BASE_URL     = "http://db-api-service.${var.namespace}.svc.cluster.local:8001"
+    # When expose_db_api=true, the service uses port 80; otherwise port 8001
+    DB_API_BASE_URL     = var.expose_db_api ? "http://db-api-service.${var.namespace}.svc.cluster.local:80" : "http://db-api-service.${var.namespace}.svc.cluster.local:8001"
     LLM_MODE            = var.llm_mode
     VECTOR_MODE         = var.vector_mode
     LOG_LEVEL           = var.log_level

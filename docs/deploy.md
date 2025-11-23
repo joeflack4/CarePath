@@ -9,12 +9,13 @@ This guide walks through deploying CarePath to AWS EKS with MongoDB Atlas.
 3. [Configuration](#configuration)
 4. [Step-by-Step Deployment](#step-by-step-deployment)
 5. [Finding Service URLs](#finding-service-urls)
-6. [Verification](#verification)
-7. [Operations & Contingencies](#operations--contingencies)
+6. [Frontend Deployment](#frontend-deployment)
+7. [Verification](#verification)
+8. [Operations & Contingencies](#operations--contingencies)
    - [Scaling Up/Down](#i-scaling-updown)
    - [Rolling Out Updates](#ii-rolling-out-updates)
    - [Rollbacks](#iii-rollbacks)
-8. [Troubleshooting](#troubleshooting)
+9. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -24,6 +25,7 @@ This guide walks through deploying CarePath to AWS EKS with MongoDB Atlas.
 - Terraform >= 1.0
 - Docker
 - kubectl
+- Node.js 18+ and npm (for frontend)
 - MongoDB Atlas account with organization ID
 
 ---
@@ -296,6 +298,78 @@ make k8s-status
 
 ---
 
+## Frontend Deployment
+
+The CarePath frontend is a React app hosted on AWS S3 with CloudFront CDN. This provides a simple web UI for chatting with the CarePath AI and viewing chat history.
+
+### Prerequisites
+
+- Node.js 18+ and npm
+- Backend APIs already deployed (db-api and chat-api)
+- Terraform frontend infrastructure created (`make tf-apply`)
+
+### Configuration
+
+Create a `.env` file in `frontend_chat/`:
+
+```bash
+cd frontend_chat
+cp .env.example .env
+```
+
+Edit `.env` with your API URLs (get these from `make k8s-get-urls`):
+```bash
+VITE_DB_API_URL=http://your-db-api-loadbalancer.elb.amazonaws.com
+VITE_CHAT_API_URL=http://your-chat-api-loadbalancer.elb.amazonaws.com
+```
+
+### Deploy Frontend
+
+```bash
+# Install dependencies (first time only)
+make frontend-install
+
+# Build and deploy to S3/CloudFront
+make frontend-deploy
+```
+
+This will:
+1. Build the React app for production
+2. Sync the build output to S3
+3. Invalidate the CloudFront cache
+4. Print the frontend URL
+
+### Local Development
+
+To run the frontend locally:
+
+```bash
+make frontend-dev
+```
+
+The dev server starts at `http://localhost:5173` with hot reload.
+
+### Frontend Makefile Commands
+
+| Command | Description |
+|---------|-------------|
+| `make frontend-install` | Install npm dependencies |
+| `make frontend-dev` | Run local dev server |
+| `make frontend-build` | Build for production |
+| `make frontend-deploy` | Build and deploy to S3/CloudFront |
+| `make frontend-invalidate-cache` | Invalidate CloudFront cache |
+
+### Frontend Configuration Variables
+
+The following Terraform variables control frontend deployment:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `expose_frontend` | `true` | Whether to create S3/CloudFront resources |
+| `frontend_bucket_name` | `carepath-demo-frontend` | S3 bucket name for static files |
+
+---
+
 ## Verification
 
 ### 1. Check Deployment Status
@@ -480,6 +554,11 @@ make deploy-chat
 | `make region-status` | Show current AWS region |
 | `make region-set-us-east-1` | Switch to us-east-1 (N. Virginia) |
 | `make region-set-us-east-2` | Switch to us-east-2 (Ohio) |
+| `make frontend-install` | Install frontend dependencies |
+| `make frontend-dev` | Run frontend dev server |
+| `make frontend-build` | Build frontend for production |
+| `make frontend-deploy` | Deploy frontend to S3/CloudFront |
+| `make frontend-invalidate-cache` | Invalidate CloudFront cache |
 
 ---
 
@@ -621,6 +700,7 @@ make tf-destroy
 
 ## Related Documentation
 
+- [Infrastructure Operations](infra.md) - Day-to-day operations (logs, scaling, rollbacks) for deployed infrastructure
 - [Rollout Options](deploy-rollout-options.md) - Deployment strategies (rolling, canary, blue-green)
 - [AI Service Upgrade](../notes/issues/6-very-high/ai-service-upgrade.md) - Deploying with real LLM
 - [Model Management](models.md) - LLM configuration

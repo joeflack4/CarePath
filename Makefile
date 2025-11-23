@@ -1,10 +1,12 @@
 .PHONY: help install-db-api install-chat run-db-api run-chat load-synthetic generate-synthetic download-llm-model \
 install-chat-llm test-triage docker-build-db-api docker-build-chat docker-push-db-api docker-push-chat ecr-login \
 aws-login tf-login tf-init tf-plan tf-apply tf-destroy deploy-db-api deploy-chat deploy-all mongo-local-start-macos \
-mongo-local-install-macos k8s-config k8s-status k8s-get-urls k8s-logs k8s-pods-list k8s-scale-up k8s-scale-down \
+mongo-local-install-macos k8s-config k8s-status k8s-get-urls k8s-logs k8s-logs-chat k8s-logs-db \
+k8s-logs-chat-errors k8s-logs-db-errors k8s-logs-all-errors k8s-pods-list k8s-scale-up k8s-scale-down \
 k8s-rollback-db-api k8s-rollback-chat k8s-rollback-all k8s-restart-db-api k8s-restart-chat k8s-history \
 ec2-config-set-as-nodes ec2-config-set-as-spot ec2-config-status region-set-us-east-1 region-set-us-east-2 \
-region-status docker-push-all test-triage-cloud test-triage-local
+region-status docker-push-all test-triage-cloud test-triage-local \
+frontend-install frontend-build frontend-deploy frontend-dev frontend-dev-local frontend-dev-cloud frontend-invalidate-cache
 
 # Default target
 help:
@@ -46,6 +48,9 @@ help:
 	@echo "  make k8s-get-urls        - Get service URLs"
 	@echo "  make k8s-pods-list            - List all pods"
 	@echo "  make k8s-logs s=SERVICE  - View logs (s=db-api or s=chat-api)"
+	@echo "  make k8s-logs-chat       - Stream chat-api logs"
+	@echo "  make k8s-logs-db         - Stream db-api logs"
+	@echo "  make k8s-logs-all-errors - Show errors from all services"
 	@echo ""
 	@echo "Scaling:"
 	@echo "  make k8s-scale-up s=SERVICE r=N   - Scale up (s=db-api|chat-api, r=replicas)"
@@ -67,14 +72,24 @@ help:
 	@echo "  make region-status           - Show current AWS region"
 	@echo "  make region-set-us-east-1    - Switch to us-east-1 (N. Virginia)"
 	@echo "  make region-set-us-east-2    - Switch to us-east-2 (Ohio)"
+	@echo ""
+	@echo "Frontend:"
+	@echo "  make frontend-install        - Install frontend dependencies"
+	@echo "  make frontend-dev-local      - Run frontend dev server (local APIs)"
+	@echo "  make frontend-dev-cloud      - Run frontend dev server (cloud APIs)"
+	@echo "  make frontend-build          - Build frontend for production"
+	@echo "  make frontend-deploy         - Deploy frontend to S3/CloudFront"
+	@echo "  make frontend-invalidate-cache - Invalidate CloudFront cache"
 
 ifneq (,$(wildcard .env))
 include .env
 export  # export included vars to child processes
 endif
 
+# Demo API URLs (update after deployment with `make k8s-get-urls`)
 # https://tinyurl.com/flack-bwell-demo-api
 DEMO_CHAT_SERVICE_URL=http://ae650096299bf4232b4e4b1df1ac3901-1174130703.us-east-2.elb.amazonaws.com
+DEMO_DB_API_URL=http://a61c57f3d91604c4188d136aa564bb0a-1897210492.us-east-2.elb.amazonaws.com
 
 # Development targets
 install-db-api:
@@ -107,8 +122,12 @@ load-synthetic:
 
 download-llm-model:
 	@echo "Downloading Qwen3-4B-Thinking-2507 model from Hugging Face..."
-	@python -c "from service_chat.services.model_manager import download_model_if_needed; download_model_if_needed()"
-	@echo "✅ Model downloaded successfully"
+	@echo "This may take a while (~8GB download)..."
+	MODEL_CACHE_DIR=./models python -m service_chat.utils.download_model
+	@echo ""
+	@echo "To use this model locally, set in .env:"
+	@echo "  MODEL_CACHE_DIR=./models"
+	@echo "  LLM_MODE=Qwen3-4B-Thinking-2507"
 
 test-triage-local:
 	@echo "Testing /triage endpoint..."
@@ -312,6 +331,32 @@ k8s-logs:
 	fi
 	kubectl logs -l app=$(s) -n $(K8S_NAMESPACE) --tail=100 -f
 
+# Convenience log shortcuts
+k8s-logs-chat:
+	@echo "=== Chat API Logs (last 100 lines, streaming) ==="
+	kubectl logs -l app=chat-api -n $(K8S_NAMESPACE) --tail=100 -f
+
+k8s-logs-db:
+	@echo "=== DB API Logs (last 100 lines, streaming) ==="
+	kubectl logs -l app=db-api -n $(K8S_NAMESPACE) --tail=100 -f
+
+k8s-logs-chat-errors:
+	@echo "=== Chat API Errors (last 200 lines) ==="
+	kubectl logs -l app=chat-api -n $(K8S_NAMESPACE) --tail=200 | grep -iE "(error|exception|traceback|500|failed)" || echo "No errors found"
+
+k8s-logs-db-errors:
+	@echo "=== DB API Errors (last 200 lines) ==="
+	kubectl logs -l app=db-api -n $(K8S_NAMESPACE) --tail=200 | grep -iE "(error|exception|traceback|500|failed)" || echo "No errors found"
+
+k8s-logs-all-errors:
+	@echo "=== All Service Errors ==="
+	@echo ""
+	@echo "--- Chat API ---"
+	@kubectl logs -l app=chat-api -n $(K8S_NAMESPACE) --tail=200 2>/dev/null | grep -iE "(error|exception|traceback|500|failed)" || echo "No errors found"
+	@echo ""
+	@echo "--- DB API ---"
+	@kubectl logs -l app=db-api -n $(K8S_NAMESPACE) --tail=200 2>/dev/null | grep -iE "(error|exception|traceback|500|failed)" || echo "No errors found"
+
 # Scaling commands
 k8s-scale-up:
 	@if [ -z "$(s)" ] || [ -z "$(r)" ]; then \
@@ -468,3 +513,62 @@ region-set-us-east-2:
 	else \
 		echo "❌ Aborted. Run 'make tf-destroy' first, then try again."; \
 	fi
+
+# Frontend targets
+FRONTEND_DIR := frontend_chat
+FRONTEND_S3_BUCKET := $(shell cd infra/terraform/envs/demo && AWS_PROFILE=$(DEPLOY_AWS_PROFILE) terraform output -raw frontend_bucket_name 2>/dev/null || echo "")
+FRONTEND_CF_DIST_ID := $(shell cd infra/terraform/envs/demo && AWS_PROFILE=$(DEPLOY_AWS_PROFILE) terraform output -raw frontend_cloudfront_distribution_id 2>/dev/null || echo "")
+
+frontend-install:
+	@echo "Installing frontend dependencies..."
+	cd $(FRONTEND_DIR) && npm install
+	@echo "✅ Frontend dependencies installed"
+
+frontend-dev-local:
+	@echo "Starting frontend dev server with LOCAL APIs..."
+	@echo "Make sure db-api (port 8001) and chat-api (port 8002) are running locally"
+	cd $(FRONTEND_DIR) && VITE_DB_API_URL=http://localhost:8001 VITE_CHAT_API_URL=http://localhost:8002 npm run dev
+
+frontend-dev-cloud:
+	@echo "Starting frontend dev server with CLOUD APIs..."
+	cd $(FRONTEND_DIR) && VITE_DB_API_URL=$(DEMO_DB_API_URL) VITE_CHAT_API_URL=$(DEMO_CHAT_SERVICE_URL) npm run dev
+
+# Alias for backward compatibility
+frontend-dev: frontend-dev-cloud
+
+frontend-live:
+	open http://carepath-demo-frontend.s3-website.us-east-2.amazonaws.com/
+
+frontend-build:
+	@echo "Building frontend for production..."
+	cd $(FRONTEND_DIR) && npm run build
+	@echo "✅ Frontend built to $(FRONTEND_DIR)/dist/"
+
+frontend-deploy: frontend-build
+	@echo "Deploying frontend to S3..."
+	@if [ -z "$(FRONTEND_S3_BUCKET)" ]; then \
+		echo "Error: S3 bucket not found. Run 'make tf-apply' first to create frontend infrastructure."; \
+		exit 1; \
+	fi
+	AWS_PROFILE=$(DEPLOY_AWS_PROFILE) aws s3 sync $(FRONTEND_DIR)/dist/ s3://$(FRONTEND_S3_BUCKET)/ --delete
+	@echo "✅ Frontend deployed to s3://$(FRONTEND_S3_BUCKET)/"
+	@echo ""
+	@echo "Invalidating CloudFront cache..."
+	@if [ -n "$(FRONTEND_CF_DIST_ID)" ]; then \
+		AWS_PROFILE=$(DEPLOY_AWS_PROFILE) aws cloudfront create-invalidation --distribution-id $(FRONTEND_CF_DIST_ID) --paths "/*" > /dev/null; \
+		echo "✅ CloudFront cache invalidated"; \
+	else \
+		echo "⚠️  CloudFront distribution ID not found, skipping cache invalidation"; \
+	fi
+	@echo ""
+	@echo "Frontend URL:"
+	@cd infra/terraform/envs/demo && AWS_PROFILE=$(DEPLOY_AWS_PROFILE) terraform output frontend_url
+
+frontend-invalidate-cache:
+	@echo "Invalidating CloudFront cache..."
+	@if [ -z "$(FRONTEND_CF_DIST_ID)" ]; then \
+		echo "Error: CloudFront distribution ID not found. Run 'make tf-apply' first."; \
+		exit 1; \
+	fi
+	AWS_PROFILE=$(DEPLOY_AWS_PROFILE) aws cloudfront create-invalidation --distribution-id $(FRONTEND_CF_DIST_ID) --paths "/*"
+	@echo "✅ CloudFront cache invalidation requested"

@@ -162,6 +162,19 @@ variable "expose_db_api" {
   default     = true  # Exposed for demo environment
 }
 
+# Frontend Configuration
+variable "expose_frontend" {
+  description = "Whether to deploy the frontend S3/CloudFront infrastructure"
+  type        = bool
+  default     = true
+}
+
+variable "frontend_bucket_name" {
+  description = "S3 bucket name for frontend static files"
+  type        = string
+  default     = "carepath-demo-frontend"
+}
+
 # Provider-level variables (used by providers.tf)
 variable "create_eks" {
   description = "Whether to create EKS cluster"

@@ -215,9 +215,9 @@ Deploy:
 
 - [x] Build and push images for both services (Makefile targets implemented)
 - [x] Run `make tf-apply` for demo env (Makefile target implemented)
-- [ ] Verify in cluster (user to complete after deployment):
-  - [ ] `kubectl get pods -n carepath-demo`
-  - [ ] Ensure `db-api` and `chat-api` pods are Running
-- [ ] Test endpoints (user to complete after deployment):
-  - [ ] `/health` on both services
-  - [ ] `/triage` via LoadBalancer/Ingress hostname
+- [x] Verify in cluster (user to complete after deployment):
+  - [x] `kubectl get pods -n carepath-demo`
+  - [x] Ensure `db-api` and `chat-api` pods are Running
+- [x] Test endpoints (user to complete after deployment):
+  - [x] `/health` on both services
+  - [x] `/triage` via LoadBalancer/Ingress hostname

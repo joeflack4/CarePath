@@ -11,6 +11,7 @@ class Settings(BaseSettings):
 
     # LLM settings
     LLM_MODE: str = "mock"  # "mock", "qwen", or "Qwen3-4B-Thinking-2507"
+    MODEL_CACHE_DIR: str = "./models"  # Directory for downloaded models
 
     # Vector DB settings
     VECTOR_MODE: str = "mock"  # "mock" or "pinecone"

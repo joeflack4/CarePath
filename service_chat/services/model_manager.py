@@ -14,8 +14,11 @@ def get_model_cache_dir() -> Path:
     Returns:
         Path: Directory path for model cache
     """
-    # Use environment variable if set, otherwise use a default location
-    cache_dir = os.environ.get("MODEL_CACHE_DIR", "/app/models")
+    # Import settings here to get MODEL_CACHE_DIR from .env via pydantic-settings
+    from ..config import settings
+
+    # Use settings which loads from .env, fallback to env var, then default
+    cache_dir = settings.MODEL_CACHE_DIR or os.environ.get("MODEL_CACHE_DIR", "./models")
     path = Path(cache_dir)
     path.mkdir(parents=True, exist_ok=True)
     return path

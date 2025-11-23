@@ -8,17 +8,18 @@ This document outlines the tasks required to deploy the chat-api service with th
 
 ## Pre-Deployment Checklist
 
-- [ ] Verify model code is implemented and tested locally
-  - [ ] `service_chat/services/model_manager.py` exists
-  - [ ] `service_chat/services/llm_client.py` has `generate_response_qwen()` implemented
-  - [ ] Dependencies added to `requirements.txt`
+- [x] Verify model code is implemented and tested locally
+  - [x] `service_chat/services/model_manager.py` exists
+  - [x] `service_chat/services/llm_client.py` has `generate_response_qwen()` implemented
+  - [x] Dependencies added to `requirements.txt` (torch, transformers, huggingface-hub, accelerate)
 
-- [ ] Test model locally (optional but recommended)
-  - [ ] Run `make install-chat-llm` to install LLM dependencies
-  - [ ] Run `make download-llm-model` to download model locally
-  - [ ] Set `LLM_MODE=Qwen3-4B-Thinking-2507` in `.env`
-  - [ ] Run `make run-chat` and test `/triage` endpoint
-  - [ ] Verify response quality and latency
+- [x] Test model locally (optional but recommended)
+  - [x] Run `make install-chat-llm` to install LLM dependencies
+  - [x] Run `make download-llm-model` to download model locally
+  - [x] Set `LLM_MODE=Qwen3-4B-Thinking-2507` in `.env`
+  - [x] Set `MODEL_CACHE_DIR=./models` in `.env`
+  - [x] Run `make run-chat` and test `/triage` endpoint
+  - [x] Verify response quality and latency (~7 min on CPU for first request)
 
 - [ ] Review infrastructure requirements
   - [ ] Check EKS node instance size (CPU/memory requirements for Qwen3-4B)
@@ -29,9 +30,9 @@ This document outlines the tasks required to deploy the chat-api service with th
 
 ## Build Phase
 
-- [ ] Build Docker image with model embedded (optional)
-
-  **Option A**: Build image with model pre-downloaded (larger image, faster startup)
+- [ ] Build Docker image with model embedded
+  
+  **Option A**: Build image with model pre-downloaded (larger image, faster startup) <-------
   ```bash
   cd service_chat
   docker build \
@@ -58,6 +59,8 @@ This document outlines the tasks required to deploy the chat-api service with th
   # Test endpoint
   curl http://localhost:8002/health
   ```
+
+We're going with option 'a' for now
 
 ---
 

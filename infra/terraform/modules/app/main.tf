@@ -164,7 +164,7 @@ resource "kubernetes_service" "db_api" {
   }
 
   spec {
-    type = "ClusterIP"
+    type = var.expose_db_api ? "LoadBalancer" : "ClusterIP"
 
     selector = {
       app = "db-api"
@@ -172,7 +172,7 @@ resource "kubernetes_service" "db_api" {
 
     port {
       name        = "http"
-      port        = 8001
+      port        = var.expose_db_api ? 80 : 8001
       target_port = 8001
       protocol    = "TCP"
     }

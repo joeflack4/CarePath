@@ -24,3 +24,13 @@ output "chat_api_load_balancer_ip" {
   description = "Load balancer IP for chat-api service"
   value       = try(kubernetes_service.chat_api.status[0].load_balancer[0].ingress[0].ip, "")
 }
+
+output "db_api_load_balancer_hostname" {
+  description = "Load balancer hostname for db-api service (only when expose_db_api=true)"
+  value       = try(kubernetes_service.db_api.status[0].load_balancer[0].ingress[0].hostname, "")
+}
+
+output "db_api_load_balancer_ip" {
+  description = "Load balancer IP for db-api service (only when expose_db_api=true)"
+  value       = try(kubernetes_service.db_api.status[0].load_balancer[0].ingress[0].ip, "")
+}

@@ -127,6 +127,35 @@ make ec2-config-set-as-nodes
 
 **Note:** After changing this setting, you must delete any existing/failed node group and run `make tf-apply` for changes to take effect. See [Troubleshooting](#troubleshooting) for details.
 
+### DB API External Access
+
+By default in the demo environment, the db-api is exposed externally via a LoadBalancer so you can query it directly (useful for demos and frontend development). In production, you'd typically keep it internal-only.
+
+| Setting | Service Type | Access |
+|---------|--------------|--------|
+| `expose_db_api = true` | LoadBalancer | Publicly accessible via ELB URL |
+| `expose_db_api = false` | ClusterIP | Internal only (within cluster) |
+
+**Check current setting:**
+```bash
+kubectl get svc db-api-service -n carepath-demo -o jsonpath='{.spec.type}'
+```
+
+**To change:** Edit `infra/terraform/envs/demo/variables.tf`:
+```hcl
+variable "expose_db_api" {
+  ...
+  default = true   # true = external, false = internal only
+}
+```
+
+Then run `make tf-apply`.
+
+**Security Note:** When `expose_db_api = true`, anyone can query your database API. This is fine for demos but for production you should:
+- Keep it internal (`expose_db_api = false`)
+- Or add authentication/API keys
+- Or use an API Gateway with auth
+
 ### AWS Region
 
 Infrastructure can be deployed to different AWS regions. This is useful if you hit quota limits in one region but have approved quotas in another.
@@ -255,9 +284,9 @@ make k8s-get-urls
 
 This shows:
 - **Chat API URL**: External LoadBalancer URL (publicly accessible)
-- **DB API URL**: Internal ClusterIP (only accessible within the cluster)
+- **DB API URL**: External LoadBalancer URL if `expose_db_api = true` (default for demo), otherwise internal ClusterIP
 
-**Note:** The LoadBalancer URL may take 2-3 minutes to provision after deployment.
+**Note:** LoadBalancer URLs may take 2-3 minutes to provision after deployment.
 
 You can also check all resources:
 
@@ -546,6 +575,35 @@ See [Configuration > EC2 Node Capacity Type](#ec2-node-capacity-type) for more d
 - Wait 2-3 minutes after deployment
 - Check service: `kubectl get svc chat-api-service -n carepath-demo`
 - Check AWS console for ELB status
+
+### Terraform state lock error
+
+**Error message:**
+```
+Error: Error acquiring the state lock
+Lock Info:
+  ID:        6811ddc7-7e48-ed54-a727-...
+  Operation: OperationTypeApply
+```
+
+**Cause:** A previous Terraform operation was interrupted (Ctrl+C, terminal closed, session timeout) before it could release the state lock. Terraform uses DynamoDB to prevent concurrent modifications.
+
+**Solution:**
+
+1. **Verify no other Terraform is running** - check for other terminals/processes
+2. **Force-unlock the state** using the Lock ID from the error:
+   ```bash
+   cd infra/terraform/envs/demo
+   source .env
+   AWS_PROFILE=$DEPLOY_AWS_PROFILE AWS_REGION=$DEPLOY_AWS_REGION \
+     terraform force-unlock -force <LOCK_ID>
+   ```
+3. **Retry your command:**
+   ```bash
+   make tf-apply
+   ```
+
+**Prevention:** Let Terraform operations complete fully. If you need to cancel, use Ctrl+C once and wait for graceful shutdown rather than force-killing.
 
 ---
 

@@ -73,5 +73,8 @@ module "app" {
   vector_mode = var.vector_mode
   log_level   = var.log_level
 
+  # Service Exposure
+  expose_db_api = var.expose_db_api
+
   depends_on = [module.eks]
 }

@@ -135,3 +135,9 @@ variable "log_level" {
   type        = string
   default     = "INFO"
 }
+
+variable "expose_db_api" {
+  description = "Whether to expose db-api externally via LoadBalancer (true) or keep internal via ClusterIP (false)"
+  type        = bool
+  default     = false
+}

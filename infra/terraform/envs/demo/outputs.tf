@@ -59,6 +59,16 @@ output "chat_api_load_balancer_ip" {
   value       = module.app.chat_api_load_balancer_ip
 }
 
+output "db_api_load_balancer_hostname" {
+  description = "Load balancer hostname for db-api (when expose_db_api=true)"
+  value       = module.app.db_api_load_balancer_hostname
+}
+
+output "db_api_load_balancer_ip" {
+  description = "Load balancer IP for db-api (when expose_db_api=true)"
+  value       = module.app.db_api_load_balancer_ip
+}
+
 # kubectl configuration command
 output "kubectl_config_command" {
   description = "Command to configure kubectl"

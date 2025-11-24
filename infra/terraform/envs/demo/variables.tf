@@ -137,9 +137,34 @@ variable "hpa_target_cpu_utilization" {
   default     = 60
 }
 
+# Chat API Resource Configuration (for LLM deployment)
+variable "chat_api_cpu_request" {
+  description = "CPU request for chat-api pods"
+  type        = string
+  default     = "100m"
+}
+
+variable "chat_api_memory_request" {
+  description = "Memory request for chat-api pods"
+  type        = string
+  default     = "256Mi"
+}
+
+variable "chat_api_cpu_limit" {
+  description = "CPU limit for chat-api pods"
+  type        = string
+  default     = "500m"
+}
+
+variable "chat_api_memory_limit" {
+  description = "Memory limit for chat-api pods"
+  type        = string
+  default     = "512Mi"
+}
+
 # Application Settings
 variable "llm_mode" {
-  description = "LLM mode (mock or qwen)"
+  description = "LLM mode (mock, qwen, or Qwen3-4B-Thinking-2507)"
   type        = string
   default     = "mock"
 }
@@ -173,6 +198,19 @@ variable "frontend_bucket_name" {
   description = "S3 bucket name for frontend static files"
   type        = string
   default     = "carepath-demo-frontend"
+}
+
+# LLM Model Cache Configuration
+variable "enable_model_cache_pvc" {
+  description = "Whether to create a PersistentVolumeClaim for LLM model caching"
+  type        = bool
+  default     = false
+}
+
+variable "model_cache_storage_size" {
+  description = "Size of the model cache PVC (should be at least 10Gi for Qwen3-4B)"
+  type        = string
+  default     = "15Gi"
 }
 
 # Provider-level variables (used by providers.tf)

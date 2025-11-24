@@ -10,8 +10,16 @@ class Settings(BaseSettings):
     DB_API_BASE_URL: str = "http://localhost:8001"
 
     # LLM settings
-    LLM_MODE: str = "mock"  # "mock", "qwen", or "Qwen3-4B-Thinking-2507"
+    DEFAULT_LLM_MODE: str = "mock"  # "mock", "gguf", "qwen", or "Qwen3-4B-Thinking-2507"
+    LLM_BACKEND: str = "auto"  # "auto", "transformers", or "gguf" (auto infers from DEFAULT_LLM_MODE)
     MODEL_CACHE_DIR: str = "./models"  # Directory for downloaded models
+
+    # GGUF model settings (for LLM_BACKEND=gguf or LLM_MODE=gguf)
+    GGUF_MODEL_REPO: str = "Qwen/Qwen2.5-1.5B-Instruct-GGUF"  # HuggingFace repo
+    GGUF_MODEL_FILE: str = "qwen2.5-1.5b-instruct-q4_k_m.gguf"  # Specific GGUF file
+    GGUF_N_CTX: int = 4096  # Context window size
+    GGUF_N_THREADS: int = 4  # Number of CPU threads
+    GGUF_MAX_TOKENS: int = 256  # Max tokens to generate
 
     # Vector DB settings
     VECTOR_MODE: str = "mock"  # "mock" or "pinecone"

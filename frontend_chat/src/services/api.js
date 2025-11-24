@@ -27,18 +27,26 @@ export async function fetchChatLogs({ skip = 0, limit = 10 } = {}) {
  * Submit a chat query to chat-api
  * @param {string} patientMrn - Patient MRN
  * @param {string} query - User's question
+ * @param {string|null} llmMode - Optional LLM mode (defaults to server's DEFAULT_LLM_MODE if not provided)
  * @returns {Promise<{trace_id: string, patient_mrn: string, query: string, llm_mode: string, response: string, conversation_id: string}>}
  */
-export async function submitChat(patientMrn, query) {
+export async function submitChat(patientMrn, query, llmMode = null) {
+  const body = {
+    patient_mrn: patientMrn,
+    query: query,
+  };
+
+  // Only include llm_mode if explicitly provided
+  if (llmMode !== null) {
+    body.llm_mode = llmMode;
+  }
+
   const response = await fetch(`${CHAT_API_URL}/triage`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      patient_mrn: patientMrn,
-      query: query,
-    }),
+    body: JSON.stringify(body),
   });
 
   if (!response.ok) {

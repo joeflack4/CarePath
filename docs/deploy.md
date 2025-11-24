@@ -310,14 +310,21 @@ The CarePath frontend is a React app hosted on AWS S3 with CloudFront CDN. This 
 
 ### Configuration
 
-Create a `.env` file in `frontend_chat/`:
+**NEW**: As of 2024-11-24, the frontend build now automatically fetches API URLs from Terraform outputs. You no longer need to manually configure `.env` for deployments!
+
+The `.env` file in `frontend_chat/` is now only used for local development. For production deployments, `make frontend-deploy` automatically:
+1. Fetches current load balancer URLs from Terraform
+2. Builds the frontend with those URLs
+3. Deploys to S3
+
+If you want to override this behavior for local development, create a `.env` file:
 
 ```bash
 cd frontend_chat
 cp .env.example .env
 ```
 
-Edit `.env` with your API URLs (get these from `make k8s-get-urls`):
+Edit `.env` with your API URLs:
 ```bash
 VITE_DB_API_URL=http://your-db-api-loadbalancer.elb.amazonaws.com
 VITE_CHAT_API_URL=http://your-chat-api-loadbalancer.elb.amazonaws.com
@@ -330,14 +337,18 @@ VITE_CHAT_API_URL=http://your-chat-api-loadbalancer.elb.amazonaws.com
 make frontend-install
 
 # Build and deploy to S3/CloudFront
+# This automatically uses current Terraform outputs for API URLs
 make frontend-deploy
 ```
 
 This will:
-1. Build the React app for production
-2. Sync the build output to S3
-3. Invalidate the CloudFront cache
-4. Print the frontend URL
+1. Fetch current API load balancer URLs from Terraform outputs
+2. Build the React app for production with those URLs
+3. Sync the build output to S3
+4. Invalidate the CloudFront cache (if CloudFront enabled)
+5. Print the frontend URL
+
+**Note**: When you run `make deploy-chat`, the frontend is automatically redeployed with updated API URLs. This ensures the frontend always points to the correct backend services.
 
 ### Local Development
 
@@ -702,6 +713,6 @@ make tf-destroy
 
 - [Infrastructure Operations](infra.md) - Day-to-day operations (logs, scaling, rollbacks) for deployed infrastructure
 - [Rollout Options](deploy-rollout-options.md) - Deployment strategies (rolling, canary, blue-green)
-- [AI Service Upgrade](../notes/issues/6-very-high/ai-service-upgrade.md) - Deploying with real LLM
+- [AI Service Upgrade](../notes/chat-upgrade.md) - Deploying with real LLM
 - [Model Management](models.md) - LLM configuration
 - [Infrastructure Guide](../infra/terraform/README.md) - Terraform details

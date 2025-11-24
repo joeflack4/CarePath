@@ -238,20 +238,59 @@ The chat log includes:
 
 The chat service behavior is controlled by environment variables:
 
+### Core Settings
+
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `LLM_MODE` | `mock` | LLM mode: `mock` or `Qwen3-4B-Thinking-2507` |
+| `LLM_MODE` | `mock` | LLM mode (see options below) |
 | `DB_API_BASE_URL` | `http://localhost:8001` | URL of the database API service |
+| `MODEL_CACHE_DIR` | `./models` | Directory for downloaded models |
 | `VECTOR_MODE` | `mock` | Vector DB mode (future use) |
 | `LOG_LEVEL` | `INFO` | Logging verbosity |
 
-To switch to real LLM mode:
-```bash
-# In .env file
-LLM_MODE=Qwen3-4B-Thinking-2507
+### LLM Mode Options
 
-# Or via command line
+| Mode | Backend | Description | Typical Latency |
+|------|---------|-------------|-----------------|
+| `mock` | - | Returns static test response | <100ms |
+| `gguf` | llama-cpp-python | Fast quantized inference (recommended) | ~2-3 min on CPU |
+| `qwen` | transformers | HuggingFace transformers | ~6-7 min on CPU |
+| `Qwen3-4B-Thinking-2507` | transformers | Full model name (same as `qwen`) | ~6-7 min on CPU |
+
+### GGUF Settings (for `LLM_MODE=gguf`)
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `GGUF_MODEL_REPO` | `Qwen/Qwen2.5-1.5B-Instruct-GGUF` | HuggingFace repo for GGUF model |
+| `GGUF_MODEL_FILE` | `qwen2.5-1.5b-instruct-q4_k_m.gguf` | Specific GGUF file to download |
+| `GGUF_N_CTX` | `4096` | Context window size |
+| `GGUF_N_THREADS` | `4` | Number of CPU threads for inference |
+| `GGUF_MAX_TOKENS` | `256` | Maximum tokens to generate |
+
+### Example Configurations
+
+**Fast local development (recommended):**
+```bash
+LLM_MODE=gguf make run-chat
+```
+
+**Testing with mock responses:**
+```bash
+LLM_MODE=mock make run-chat
+```
+
+**Using transformers backend:**
+```bash
+LLM_MODE=qwen make run-chat
+# or
 LLM_MODE=Qwen3-4B-Thinking-2507 make run-chat
+```
+
+**Custom GGUF model:**
+```bash
+GGUF_MODEL_REPO=Qwen/Qwen2.5-3B-Instruct-GGUF \
+GGUF_MODEL_FILE=qwen2.5-3b-instruct-q4_k_m.gguf \
+LLM_MODE=gguf make run-chat
 ```
 
 ---
@@ -272,15 +311,21 @@ grep "a1b2c3d4-e5f6-7890-abcd-ef1234567890" logs/*.log
 
 ## Performance Notes
 
-| LLM Mode | Typical Latency | Notes |
-|----------|-----------------|-------|
-| `mock` | <100ms | For testing and development |
-| `Qwen3-4B-Thinking-2507` | 5-15s | CPU inference, first request slower due to model loading |
+| LLM Mode | Model | Typical Latency | Notes |
+|----------|-------|-----------------|-------|
+| `mock` | - | <100ms | For testing and development |
+| `gguf` | Qwen2.5-1.5B-Instruct | ~2-3 min | Recommended for CPU inference |
+| `qwen` | Qwen3-4B-Thinking | ~6-7 min | Slower, higher quality reasoning |
 
-For production deployments with real LLM:
-- Consider GPU instances for faster inference
+**Benchmark results (MacBook Pro, CPU):**
+- GGUF (1.5B params, Q4_K_M): **156s** for 256 tokens
+- Transformers (4B params, FP16): ~6-7 min for 128 tokens
+
+For production deployments:
+- **Recommended**: Use `gguf` mode with smaller quantized models
 - Model is cached after first load
-- Increase pod resources (CPU/memory limits)
+- GGUF uses Metal GPU on Mac for acceleration
+- Consider GPU instances for faster inference in cloud
 
 ---
 
@@ -288,4 +333,4 @@ For production deployments with real LLM:
 
 - **[Database API Documentation](api-db.md)** - Data endpoints used by this service
 - **[Model Management](models.md)** - How to configure and deploy LLM models
-- **[AI Service Upgrade Guide](../notes/issues/6-very-high/ai-service-upgrade.md)** - Deploying with real LLM
+- **[AI Service Upgrade Guide](../notes/chat-upgrade.md)** - Deploying with real LLM

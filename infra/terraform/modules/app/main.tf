@@ -36,7 +36,7 @@ resource "kubernetes_config_map" "app_config" {
     MONGODB_DB_NAME     = var.mongodb_db_name
     # When expose_db_api=true, the service uses port 80; otherwise port 8001
     DB_API_BASE_URL     = var.expose_db_api ? "http://db-api-service.${var.namespace}.svc.cluster.local:80" : "http://db-api-service.${var.namespace}.svc.cluster.local:8001"
-    LLM_MODE            = var.llm_mode
+    DEFAULT_LLM_MODE    = var.llm_mode
     VECTOR_MODE         = var.vector_mode
     LOG_LEVEL           = var.log_level
   }
@@ -181,6 +181,33 @@ resource "kubernetes_service" "db_api" {
 }
 
 #================================
+# Model Cache PersistentVolumeClaim (for LLM)
+#================================
+
+resource "kubernetes_persistent_volume_claim" "model_cache" {
+  count = var.enable_model_cache_pvc ? 1 : 0
+
+  # Don't wait for binding - PVC uses WaitForFirstConsumer and binds when pod starts
+  wait_until_bound = false
+
+  metadata {
+    name      = "chat-api-model-cache"
+    namespace = kubernetes_namespace.carepath.metadata[0].name
+  }
+
+  spec {
+    access_modes       = ["ReadWriteOnce"]
+    storage_class_name = "gp2"
+
+    resources {
+      requests = {
+        storage = var.model_cache_storage_size
+      }
+    }
+  }
+}
+
+#================================
 # Chat API Deployment and Service
 #================================
 
@@ -231,11 +258,11 @@ resource "kubernetes_deployment" "chat_api" {
           }
 
           env {
-            name = "LLM_MODE"
+            name = "DEFAULT_LLM_MODE"
             value_from {
               config_map_key_ref {
                 name = kubernetes_config_map.app_config.metadata[0].name
-                key  = "LLM_MODE"
+                key  = "DEFAULT_LLM_MODE"
               }
             }
           }
@@ -276,26 +303,53 @@ resource "kubernetes_deployment" "chat_api" {
             }
           }
 
+          # LLM model is now loaded eagerly at startup via FastAPI lifespan handler.
+          # The /ready endpoint returns 503 until model is loaded, then 200.
+          # This means pod won't receive traffic until model is fully ready.
+          #
+          # Probes tuned for slow CPU inference (GGUF on r5.large):
+          # - Inference runs in background thread, so health checks stay responsive
+          # - Very conservative timeouts to handle worst-case scenarios
           liveness_probe {
             http_get {
               path = "/health"
               port = 8002
             }
-            initial_delay_seconds = 30
-            period_seconds        = 10
-            timeout_seconds       = 5
-            failure_threshold     = 3
+            initial_delay_seconds = 180  # Wait 3 min for model to load before checking liveness
+            period_seconds        = 120  # Check every 2 minutes (reduced log spam)
+            timeout_seconds       = 180  # 3 min timeout per check (very conservative)
+            failure_threshold     = 20   # 20 failures = 40 min grace period (120s × 20)
           }
 
           readiness_probe {
             http_get {
-              path = "/health"
+              path = "/ready"
               port = 8002
             }
-            initial_delay_seconds = 10
-            period_seconds        = 5
-            timeout_seconds       = 3
-            failure_threshold     = 3
+            initial_delay_seconds = 5    # Start checking quickly
+            period_seconds        = 120  # Check every 2 minutes (reduced log spam)
+            timeout_seconds       = 30   # 30s timeout (endpoint is lightweight)
+            failure_threshold     = 120  # Allow 120 failures (120 × 120s = 4 hours for model load)
+          }
+
+          # Mount model cache PVC if enabled
+          dynamic "volume_mount" {
+            for_each = var.enable_model_cache_pvc ? [1] : []
+            content {
+              name       = "model-cache"
+              mount_path = "/app/models"
+            }
+          }
+        }
+
+        # Volume for model cache PVC
+        dynamic "volume" {
+          for_each = var.enable_model_cache_pvc ? [1] : []
+          content {
+            name = "model-cache"
+            persistent_volume_claim {
+              claim_name = kubernetes_persistent_volume_claim.model_cache[0].metadata[0].name
+            }
           }
         }
       }
@@ -309,6 +363,11 @@ resource "kubernetes_service" "chat_api" {
     namespace = kubernetes_namespace.carepath.metadata[0].name
     labels = {
       app = "chat-api"
+    }
+    # ELB annotations for long-running LLM inference requests
+    annotations = {
+      # Increase idle timeout to 600s (10 min) for slow CPU inference
+      "service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout" = "600"
     }
   }
 

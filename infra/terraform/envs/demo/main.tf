@@ -63,6 +63,12 @@ module "app" {
   db_api_replicas  = var.db_api_replicas
   chat_api_replicas = var.chat_api_replicas
 
+  # Chat API Resource Limits (for LLM deployment)
+  chat_api_cpu_request    = var.chat_api_cpu_request
+  chat_api_memory_request = var.chat_api_memory_request
+  chat_api_cpu_limit      = var.chat_api_cpu_limit
+  chat_api_memory_limit   = var.chat_api_memory_limit
+
   # HPA Configuration
   hpa_min_replicas            = var.hpa_min_replicas
   hpa_max_replicas            = var.hpa_max_replicas
@@ -75,6 +81,10 @@ module "app" {
 
   # Service Exposure
   expose_db_api = var.expose_db_api
+
+  # LLM Model Cache PVC
+  enable_model_cache_pvc   = var.enable_model_cache_pvc
+  model_cache_storage_size = var.model_cache_storage_size
 
   depends_on = [module.eks]
 }

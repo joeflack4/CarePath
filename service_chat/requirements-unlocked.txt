@@ -1,14 +1,14 @@
-fastapi==0.121.3
-uvicorn==0.38.0
-httpx==0.28.1
-pydantic-settings==2.12.0
+fastapi
+uvicorn
+httpx
+pydantic-settings
 
 # LLM dependencies (for LLM_MODE=qwen or Qwen3-4B-Thinking-2507) - SLOW on CPU
-torch==2.5.1
+torch
 # Qwen3 models require transformers >= 4.51.0 (Qwen3 support was added in 4.51)
-transformers>=4.52.0
-huggingface-hub>=0.27.0
-accelerate>=1.0.0
+transformers
+huggingface-hub
+accelerate
 
 # GGUF/llama.cpp dependencies (for LLM_MODE=gguf) - FAST on CPU
-llama-cpp-python>=0.3.0
+llama-cpp-python

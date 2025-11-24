@@ -141,3 +141,16 @@ variable "expose_db_api" {
   type        = bool
   default     = false
 }
+
+# LLM Model Cache Configuration
+variable "enable_model_cache_pvc" {
+  description = "Whether to create a PersistentVolumeClaim for LLM model caching"
+  type        = bool
+  default     = false
+}
+
+variable "model_cache_storage_size" {
+  description = "Size of the model cache PVC (should be at least 10Gi for Qwen3-4B)"
+  type        = string
+  default     = "15Gi"
+}

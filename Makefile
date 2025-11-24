@@ -256,6 +256,10 @@ deploy-chat: docker-build-chat docker-push-chat
 	AWS_PROFILE=$(DEPLOY_AWS_PROFILE) AWS_REGION=$(DEPLOY_AWS_REGION) \
 	terraform apply -target=module.app.kubernetes_deployment.chat_api -auto-approve
 	@echo "✅ chat-api deployed successfully"
+	@echo ""
+	@echo "Updating frontend with new API URLs..."
+	@$(MAKE) frontend-deploy
+	@echo "✅ Frontend updated with latest API endpoints"
 
 deploy-all: docker-build-db-api docker-build-chat docker-push-db-api docker-push-chat
 	@echo "Deploying all services..."
@@ -317,8 +321,14 @@ k8s-get-urls:
 	@echo "Chat API (External LoadBalancer):"
 	@kubectl get svc chat-api-service -n $(K8S_NAMESPACE) -o jsonpath='  URL: http://{.status.loadBalancer.ingress[0].hostname}{"\n"}' 2>/dev/null || echo "  (not yet available - LoadBalancer provisioning)"
 	@echo ""
-	@echo "DB API (Internal ClusterIP - not externally accessible):"
-	@kubectl get svc db-api-service -n $(K8S_NAMESPACE) -o jsonpath='  Internal: {.spec.clusterIP}:{.spec.ports[0].port}{"\n"}' 2>/dev/null || echo "  (not available)"
+	@DB_TYPE=$$(kubectl get svc db-api-service -n $(K8S_NAMESPACE) -o jsonpath='{.spec.type}' 2>/dev/null); \
+	if [ "$$DB_TYPE" = "LoadBalancer" ]; then \
+		echo "DB API (External LoadBalancer):"; \
+		kubectl get svc db-api-service -n $(K8S_NAMESPACE) -o jsonpath='  URL: http://{.status.loadBalancer.ingress[0].hostname}{"\n"}' 2>/dev/null || echo "  (LoadBalancer provisioning...)"; \
+	else \
+		echo "DB API (Internal ClusterIP - not externally accessible):"; \
+		kubectl get svc db-api-service -n $(K8S_NAMESPACE) -o jsonpath='  Internal: {.spec.clusterIP}:{.spec.ports[0].port}{"\n"}' 2>/dev/null || echo "  (not available)"; \
+	fi
 
 k8s-pods-list:
 	kubectl get pods -n $(K8S_NAMESPACE) -o wide
@@ -541,7 +551,18 @@ frontend-live:
 
 frontend-build:
 	@echo "Building frontend for production..."
-	cd $(FRONTEND_DIR) && npm run build
+	@echo "Fetching API URLs from Terraform outputs..."
+	@DB_API_LB=$$(cd infra/terraform/envs/demo && AWS_PROFILE=$(DEPLOY_AWS_PROFILE) terraform output -raw db_api_load_balancer_hostname 2>/dev/null); \
+	CHAT_API_LB=$$(cd infra/terraform/envs/demo && AWS_PROFILE=$(DEPLOY_AWS_PROFILE) terraform output -raw chat_api_load_balancer_hostname 2>/dev/null); \
+	if [ -n "$$DB_API_LB" ] && [ -n "$$CHAT_API_LB" ]; then \
+		echo "Using API URLs from Terraform:"; \
+		echo "  DB API: http://$$DB_API_LB"; \
+		echo "  Chat API: http://$$CHAT_API_LB"; \
+		VITE_DB_API_URL="http://$$DB_API_LB" VITE_CHAT_API_URL="http://$$CHAT_API_LB" cd $(FRONTEND_DIR) && npm run build; \
+	else \
+		echo "⚠️  Warning: Could not fetch Terraform outputs, using .env file values"; \
+		cd $(FRONTEND_DIR) && npm run build; \
+	fi
 	@echo "✅ Frontend built to $(FRONTEND_DIR)/dist/"
 
 frontend-deploy: frontend-build

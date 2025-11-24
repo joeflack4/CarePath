@@ -18,6 +18,7 @@ class TriageRequest(BaseModel):
     """Request model for triage endpoint."""
     patient_mrn: str
     query: str
+    llm_mode: Optional[str] = None  # Optional: uses DEFAULT_LLM_MODE if not provided
 
 
 class TriageResponse(BaseModel):
@@ -27,6 +28,7 @@ class TriageResponse(BaseModel):
     query: str
     llm_mode: str
     response: str
+    inference_time_ms: float
     conversation_id: Optional[str] = None  # ID of stored chat log
 
 
@@ -115,13 +117,16 @@ async def triage(request: TriageRequest):
         # Build prompt using RAG service
         prompt = rag_service.build_prompt(request.query, patient_summary)
 
+        # Determine which LLM mode to use (request parameter or default)
+        llm_mode = request.llm_mode if request.llm_mode is not None else settings.DEFAULT_LLM_MODE
+
         # Generate LLM response
         start_time = time.time()
-        log_span(trace_id, "llm_inference_start", llm_mode=settings.LLM_MODE)
+        log_span(trace_id, "llm_inference_start", llm_mode=llm_mode)
 
         try:
-            llm_response = llm_client.generate_response(
-                settings.LLM_MODE,
+            llm_response = await llm_client.generate_response(
+                llm_mode,
                 request.query,
                 patient_summary
             )
@@ -159,7 +164,7 @@ async def triage(request: TriageRequest):
                 "role": "assistant",
                 "content": llm_response,
                 "timestamp": now,
-                "model_name": settings.LLM_MODE,
+                "model_name": llm_mode,
                 "latency_ms": llm_elapsed_ms
             }
         ]
@@ -183,8 +188,9 @@ async def triage(request: TriageRequest):
             trace_id=trace_id,
             patient_mrn=request.patient_mrn,
             query=request.query,
-            llm_mode=settings.LLM_MODE,
+            llm_mode=llm_mode,
             response=llm_response,
+            inference_time_ms=llm_elapsed_ms,
             conversation_id=conversation_id
         )
 

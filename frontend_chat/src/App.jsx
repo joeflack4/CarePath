@@ -11,6 +11,7 @@ function App() {
   const [chatState, setChatState] = useState({
     query: '',
     patientMrn: 'P000123',
+    llmMode: '',  // Empty string means use server default
     response: null,
     isLoading: false,
     error: null,

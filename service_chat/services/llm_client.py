@@ -242,6 +242,7 @@ async def generate_response(mode: str, query: str, patient_summary: Dict[str, An
             - "mock": Returns a static test response
             - "gguf": Uses llama.cpp with GGUF quantized model (FAST on CPU)
             - "qwen" or "Qwen3-4B-Thinking-2507": Uses transformers (SLOW on CPU)
+            - "hf-qwen2.5": Uses HF Qwen2.5 via Router API with provider (RECOMMENDED)
         query: User's question
         patient_summary: Patient data from service_db_api
 
@@ -257,8 +258,11 @@ async def generate_response(mode: str, query: str, patient_summary: Dict[str, An
         return await generate_response_gguf(query, patient_summary)
     elif mode in ("qwen", "Qwen3-4B-Thinking-2507"):
         return generate_response_qwen(query, patient_summary)
+    elif mode == "hf-qwen2.5":
+        from service_chat.services.hf_client import generate_response_hf_qwen
+        return await generate_response_hf_qwen(query, patient_summary)
     else:
         raise ValueError(
             f"Unknown LLM mode: {mode}. "
-            f"Expected 'mock', 'gguf', 'qwen', or 'Qwen3-4B-Thinking-2507'."
+            f"Expected 'mock', 'gguf', 'qwen', 'Qwen3-4B-Thinking-2507', or 'hf-qwen2.5'."
         )

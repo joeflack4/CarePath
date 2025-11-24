@@ -54,6 +54,9 @@ async def lifespan(app: FastAPI):
             elif settings.DEFAULT_LLM_MODE in ("qwen", "Qwen3-4B-Thinking-2507"):
                 from service_chat.services.llm_client import _load_model_cached
                 _load_model_cached()
+            elif settings.DEFAULT_LLM_MODE == "hf-qwen2.5":
+                from service_chat.services.hf_client import warmup_hf_model
+                warmup_hf_model()
             else:
                 logger.warning("Unknown DEFAULT_LLM_MODE=%s - skipping model loading", settings.DEFAULT_LLM_MODE)
             logger.info("Model loaded successfully - pod is ready to serve requests")

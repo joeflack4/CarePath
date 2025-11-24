@@ -9,7 +9,7 @@ const LLM_MODES = [
   { value: 'gguf', label: 'GGUF (Qwen 1.5B)' },
   { value: 'qwen', label: 'Qwen (Transformers)' },
   { value: 'Qwen3-4B-Thinking-2507', label: 'Qwen3 4B Thinking' },
-  { value: 'huggingface', label: 'Hugging Face' },
+  { value: 'hf-qwen2.5', label: 'HF Qwen2.5 7B (Hosted)' },
 ];
 
 export default function Chat({ chatState, onStateChange }) {

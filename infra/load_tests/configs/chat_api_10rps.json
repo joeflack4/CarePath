@@ -1,0 +1,8 @@
+{
+    "description": "Chat API load test - 10 RPS target",
+    "users": 10,
+    "spawn_rate": 2,
+    "run_time": "300s",
+    "host": "http://localhost:8002",
+    "notes": "Light load test. With actual LLM (6-7 min inference), requests will queue. This tests real-world capacity."
+}

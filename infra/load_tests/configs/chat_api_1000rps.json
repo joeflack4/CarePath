@@ -1,0 +1,8 @@
+{
+    "description": "Chat API load test - 1000 RPS target",
+    "users": 500,
+    "spawn_rate": 50,
+    "run_time": "300s",
+    "host": "http://localhost:8002",
+    "notes": "Extreme load test. With actual LLM inference (6-7 min), this WILL cause widespread failures. Use only to stress test infrastructure limits."
+}

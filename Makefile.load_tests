@@ -1,0 +1,163 @@
+# Load Testing targets
+# Variables
+LOAD_TESTS_DIR := infra/load_tests
+LOAD_TESTS_RESULTS_DIR := $(LOAD_TESTS_DIR)/results
+TIMESTAMP := $(shell date +%Y%m%d_%H%M%S)
+
+# Installation
+install-load-tests:
+	@echo "Installing Locust load testing dependencies..."
+	pip install -r $(LOAD_TESTS_DIR)/requirements.txt
+	@echo "✅ Load testing dependencies installed"
+
+# DB API Load Tests
+load-test-db-api:
+	@echo "Running DB API load test (default settings)..."
+	@mkdir -p $(LOAD_TESTS_RESULTS_DIR)
+	cd $(LOAD_TESTS_DIR) && \
+	locust -f db_api_locustfile.py \
+		--host=http://localhost:8001 \
+		--users=10 \
+		--spawn-rate=2 \
+		--run-time=60s \
+		--headless \
+		--html=results/db_api_$(TIMESTAMP).html \
+		--csv=results/db_api_$(TIMESTAMP)
+	@echo ""
+	@echo "✅ Load test complete. Results saved to $(LOAD_TESTS_RESULTS_DIR)/db_api_$(TIMESTAMP).*"
+	@python $(LOAD_TESTS_DIR)/format_results.py $(LOAD_TESTS_RESULTS_DIR)
+
+load-test-db-api-10rps:
+	@echo "Running DB API load test - 10 RPS target..."
+	@mkdir -p $(LOAD_TESTS_RESULTS_DIR)
+	cd $(LOAD_TESTS_DIR) && \
+	locust -f db_api_locustfile.py \
+		--host=http://localhost:8001 \
+		--users=5 \
+		--spawn-rate=2 \
+		--run-time=60s \
+		--headless \
+		--html=results/db_api_10rps_$(TIMESTAMP).html \
+		--csv=results/db_api_10rps_$(TIMESTAMP)
+	@echo ""
+	@echo "✅ Load test complete. Results saved to $(LOAD_TESTS_RESULTS_DIR)/db_api_10rps_$(TIMESTAMP).*"
+	@python $(LOAD_TESTS_DIR)/format_results.py $(LOAD_TESTS_RESULTS_DIR)
+
+load-test-db-api-100rps:
+	@echo "Running DB API load test - 100 RPS target..."
+	@mkdir -p $(LOAD_TESTS_RESULTS_DIR)
+	cd $(LOAD_TESTS_DIR) && \
+	locust -f db_api_locustfile.py \
+		--host=http://localhost:8001 \
+		--users=50 \
+		--spawn-rate=10 \
+		--run-time=120s \
+		--headless \
+		--html=results/db_api_100rps_$(TIMESTAMP).html \
+		--csv=results/db_api_100rps_$(TIMESTAMP)
+	@echo ""
+	@echo "✅ Load test complete. Results saved to $(LOAD_TESTS_RESULTS_DIR)/db_api_100rps_$(TIMESTAMP).*"
+	@python $(LOAD_TESTS_DIR)/format_results.py $(LOAD_TESTS_RESULTS_DIR)
+
+load-test-db-api-1000rps:
+	@echo "Running DB API load test - 1000 RPS target..."
+	@mkdir -p $(LOAD_TESTS_RESULTS_DIR)
+	cd $(LOAD_TESTS_DIR) && \
+	locust -f db_api_locustfile.py \
+		--host=http://localhost:8001 \
+		--users=500 \
+		--spawn-rate=50 \
+		--run-time=180s \
+		--headless \
+		--html=results/db_api_1000rps_$(TIMESTAMP).html \
+		--csv=results/db_api_1000rps_$(TIMESTAMP)
+	@echo ""
+	@echo "✅ Load test complete. Results saved to $(LOAD_TESTS_RESULTS_DIR)/db_api_1000rps_$(TIMESTAMP).*"
+	@python $(LOAD_TESTS_DIR)/format_results.py $(LOAD_TESTS_RESULTS_DIR)
+
+# Chat API Load Tests
+load-test-chat:
+	@echo "Running Chat API load test (default settings)..."
+	@echo "⚠️  Note: Chat API uses actual LLM inference (6-7 min), expect long response times"
+	@mkdir -p $(LOAD_TESTS_RESULTS_DIR)
+	cd $(LOAD_TESTS_DIR) && \
+	locust -f chat_api_locustfile.py \
+		--host=http://localhost:8002 \
+		--users=5 \
+		--spawn-rate=1 \
+		--run-time=300s \
+		--headless \
+		--html=results/chat_api_$(TIMESTAMP).html \
+		--csv=results/chat_api_$(TIMESTAMP)
+	@echo ""
+	@echo "✅ Load test complete. Results saved to $(LOAD_TESTS_RESULTS_DIR)/chat_api_$(TIMESTAMP).*"
+	@python $(LOAD_TESTS_DIR)/format_results.py $(LOAD_TESTS_RESULTS_DIR)
+
+load-test-chat-10rps:
+	@echo "Running Chat API load test - 10 RPS target..."
+	@echo "⚠️  Note: Chat API uses actual LLM inference (6-7 min), expect queue buildup"
+	@mkdir -p $(LOAD_TESTS_RESULTS_DIR)
+	cd $(LOAD_TESTS_DIR) && \
+	locust -f chat_api_locustfile.py \
+		--host=http://localhost:8002 \
+		--users=10 \
+		--spawn-rate=2 \
+		--run-time=300s \
+		--headless \
+		--html=results/chat_api_10rps_$(TIMESTAMP).html \
+		--csv=results/chat_api_10rps_$(TIMESTAMP)
+	@echo ""
+	@echo "✅ Load test complete. Results saved to $(LOAD_TESTS_RESULTS_DIR)/chat_api_10rps_$(TIMESTAMP).*"
+	@python $(LOAD_TESTS_DIR)/format_results.py $(LOAD_TESTS_RESULTS_DIR)
+
+load-test-chat-100rps:
+	@echo "Running Chat API load test - 100 RPS target..."
+	@echo "⚠️  Warning: This will likely cause timeouts and failures due to LLM inference time"
+	@mkdir -p $(LOAD_TESTS_RESULTS_DIR)
+	cd $(LOAD_TESTS_DIR) && \
+	locust -f chat_api_locustfile.py \
+		--host=http://localhost:8002 \
+		--users=100 \
+		--spawn-rate=10 \
+		--run-time=300s \
+		--headless \
+		--html=results/chat_api_100rps_$(TIMESTAMP).html \
+		--csv=results/chat_api_100rps_$(TIMESTAMP)
+	@echo ""
+	@echo "✅ Load test complete. Results saved to $(LOAD_TESTS_RESULTS_DIR)/chat_api_100rps_$(TIMESTAMP).*"
+	@python $(LOAD_TESTS_DIR)/format_results.py $(LOAD_TESTS_RESULTS_DIR)
+
+load-test-chat-1000rps:
+	@echo "Running Chat API load test - 1000 RPS target..."
+	@echo "⚠️  Warning: This WILL cause widespread failures. Use only for stress testing limits."
+	@mkdir -p $(LOAD_TESTS_RESULTS_DIR)
+	cd $(LOAD_TESTS_DIR) && \
+	locust -f chat_api_locustfile.py \
+		--host=http://localhost:8002 \
+		--users=500 \
+		--spawn-rate=50 \
+		--run-time=300s \
+		--headless \
+		--html=results/chat_api_1000rps_$(TIMESTAMP).html \
+		--csv=results/chat_api_1000rps_$(TIMESTAMP)
+	@echo ""
+	@echo "✅ Load test complete. Results saved to $(LOAD_TESTS_RESULTS_DIR)/chat_api_1000rps_$(TIMESTAMP).*"
+	@python $(LOAD_TESTS_DIR)/format_results.py $(LOAD_TESTS_RESULTS_DIR)
+
+# Web UI (interactive mode)
+load-test-web-db-api:
+	@echo "Starting Locust web UI for DB API..."
+	@echo "Open http://localhost:8089 in your browser"
+	cd $(LOAD_TESTS_DIR) && \
+	locust -f db_api_locustfile.py --host=http://localhost:8001
+
+load-test-web-chat:
+	@echo "Starting Locust web UI for Chat API..."
+	@echo "Open http://localhost:8089 in your browser"
+	cd $(LOAD_TESTS_DIR) && \
+	locust -f chat_api_locustfile.py --host=http://localhost:8002
+
+# Results
+load-test-results:
+	@echo "Displaying latest load test results..."
+	@python $(LOAD_TESTS_DIR)/format_results.py $(LOAD_TESTS_RESULTS_DIR)

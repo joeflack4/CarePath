@@ -1,0 +1,8 @@
+{
+    "description": "DB API load test - 1000 RPS target",
+    "users": 500,
+    "spawn_rate": 50,
+    "run_time": "180s",
+    "host": "http://localhost:8001",
+    "notes": "Heavy load test. With ~10ms response time, 500 users should achieve ~1000 RPS. May stress local MongoDB."
+}

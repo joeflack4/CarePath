@@ -6,7 +6,9 @@ k8s-logs-chat-errors k8s-logs-db-errors k8s-logs-all-errors k8s-pods-list k8s-sc
 k8s-rollback-db-api k8s-rollback-chat k8s-rollback-all k8s-restart-db-api k8s-restart-chat k8s-history \
 ec2-config-set-as-nodes ec2-config-set-as-spot ec2-config-status region-set-us-east-1 region-set-us-east-2 \
 region-status docker-push-all test-triage-cloud test-triage-local \
-frontend-install frontend-build frontend-deploy frontend-dev frontend-dev-local frontend-dev-cloud frontend-invalidate-cache
+frontend-install frontend-build frontend-deploy frontend-dev frontend-dev-local frontend-dev-cloud frontend-invalidate-cache \
+install-load-tests load-test-db-api load-test-chat load-test-db-api-10rps load-test-db-api-100rps load-test-db-api-1000rps \
+load-test-chat-10rps load-test-chat-100rps load-test-chat-1000rps load-test-web-db-api load-test-web-chat load-test-results
 
 # Default target
 help:
@@ -80,11 +82,28 @@ help:
 	@echo "  make frontend-build          - Build frontend for production"
 	@echo "  make frontend-deploy         - Deploy frontend to S3/CloudFront"
 	@echo "  make frontend-invalidate-cache - Invalidate CloudFront cache"
+	@echo ""
+	@echo "Load Testing:"
+	@echo "  make install-load-tests      - Install Locust load testing dependencies"
+	@echo "  make load-test-db-api        - Run DB API load test (default settings)"
+	@echo "  make load-test-chat          - Run Chat API load test (default settings)"
+	@echo "  make load-test-db-api-10rps  - DB API load test at 10 RPS"
+	@echo "  make load-test-db-api-100rps - DB API load test at 100 RPS"
+	@echo "  make load-test-db-api-1000rps - DB API load test at 1000 RPS"
+	@echo "  make load-test-chat-10rps    - Chat API load test at 10 RPS"
+	@echo "  make load-test-chat-100rps   - Chat API load test at 100 RPS"
+	@echo "  make load-test-chat-1000rps  - Chat API load test at 1000 RPS"
+	@echo "  make load-test-web-db-api    - Start Locust web UI for DB API"
+	@echo "  make load-test-web-chat      - Start Locust web UI for Chat API"
+	@echo "  make load-test-results       - Display results from last load test"
 
 ifneq (,$(wildcard .env))
 include .env
 export  # export included vars to child processes
 endif
+
+# Include load testing targets
+include Makefile.load_tests
 
 # Demo API URLs (update after deployment with `make k8s-get-urls`)
 # https://tinyurl.com/flack-bwell-demo-api

@@ -85,3 +85,6 @@ celerybeat-schedule.db
 *.tfstate
 *.tfstate.backup
 backend.hcl
+
+# Load Testing
+infra/load_tests/results/

@@ -1,0 +1,8 @@
+{
+    "description": "DB API load test - 100 RPS target",
+    "users": 50,
+    "spawn_rate": 10,
+    "run_time": "120s",
+    "host": "http://localhost:8001",
+    "notes": "Medium load test. With ~10ms response time, 50 users should achieve ~100 RPS."
+}

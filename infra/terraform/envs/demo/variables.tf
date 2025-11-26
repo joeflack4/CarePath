@@ -213,6 +213,37 @@ variable "model_cache_storage_size" {
   default     = "15Gi"
 }
 
+# Hugging Face Inference API Configuration
+variable "hf_api_token" {
+  description = "Hugging Face API token for Router API"
+  type        = string
+  sensitive   = true
+}
+
+variable "hf_qwen_model_id" {
+  description = "HF model ID with provider (e.g., Qwen/Qwen2.5-7B-Instruct:together)"
+  type        = string
+  default     = "Qwen/Qwen2.5-7B-Instruct:together"
+}
+
+variable "hf_timeout_seconds" {
+  description = "HF API request timeout in seconds"
+  type        = number
+  default     = 30
+}
+
+variable "hf_max_new_tokens" {
+  description = "Max tokens to generate"
+  type        = number
+  default     = 256
+}
+
+variable "hf_temperature" {
+  description = "Sampling temperature"
+  type        = number
+  default     = 0.7
+}
+
 # Provider-level variables (used by providers.tf)
 variable "create_eks" {
   description = "Whether to create EKS cluster"

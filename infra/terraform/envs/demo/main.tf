@@ -86,6 +86,13 @@ module "app" {
   enable_model_cache_pvc   = var.enable_model_cache_pvc
   model_cache_storage_size = var.model_cache_storage_size
 
+  # Hugging Face Inference API Configuration
+  hf_api_token       = var.hf_api_token
+  hf_qwen_model_id   = var.hf_qwen_model_id
+  hf_timeout_seconds = var.hf_timeout_seconds
+  hf_max_new_tokens  = var.hf_max_new_tokens
+  hf_temperature     = var.hf_temperature
+
   depends_on = [module.eks]
 }
 

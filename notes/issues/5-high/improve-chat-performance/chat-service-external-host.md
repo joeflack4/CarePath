@@ -293,19 +293,23 @@ After local testing passes:
 
 **File: `infra/terraform/modules/app/main.tf`**
 
-- [ ] Add HF_API_TOKEN to ConfigMap or Secret:
+- [x] ✅ **COMPLETED 2025-11-25** - Add HF_API_TOKEN to Kubernetes Secret:
   ```hcl
-  env {
-    name  = "HF_API_TOKEN"
-    value = var.hf_api_token  # Should come from secrets, not checked in
-  }
-  env {
-    name  = "HF_MODEL_ID"
-    value = var.hf_model_id
+  resource "kubernetes_secret" "hf_api" {
+    metadata {
+      name      = "hf-api-secret"
+      namespace = kubernetes_namespace.carepath.metadata[0].name
+    }
+    data = {
+      HF_API_TOKEN = var.hf_api_token
+    }
+    type = "Opaque"
   }
   ```
-- [ ] Add corresponding variables to module inputs
-- [ ] Update `infra/terraform/envs/demo/terraform.tfvars` with values
+- [x] ✅ **COMPLETED** - Add HF config vars to ConfigMap (HF_QWEN_MODEL_ID, HF_TIMEOUT_SECONDS, etc.)
+- [x] ✅ **COMPLETED** - Add 5 HF environment variables to chat-api container
+- [x] ✅ **COMPLETED** - Add corresponding variables to module inputs (5 HF variables)
+- [x] ✅ **COMPLETED** - Update `infra/terraform/envs/demo/terraform.tfvars` with HF configuration
 
 ### 8. Testing & Validation
 
@@ -358,7 +362,7 @@ After local testing passes:
 - [x] ✅ Logs show HF Router API calls with latency metrics
 - [x] ✅ No PHI in logs
 - [x] ✅ Errors fail gracefully with clear messages (tested with 404)
-- [ ] ⏳ Works in K8s deployment (not yet deployed - pending terraform config)
+- [x] ✅ Works in K8s deployment - **DEPLOYED 2025-11-25**
 
 ---
 
@@ -382,4 +386,10 @@ After local testing passes:
 ### Status
 
 - **Local Development**: ✅ Working perfectly
-- **Cloud Deployment**: ⏳ Pending (requires terraform updates for HF_API_TOKEN)
+- **Cloud Deployment**: ✅ **DEPLOYED 2025-11-25**
+  - Terraform configured with HF_API_TOKEN via environment variable
+  - Kubernetes Secret created for sensitive token
+  - ConfigMap updated with HF configuration
+  - Pod running and serving requests successfully
+  - Response time: ~878ms (0.9 seconds)
+  - See `notes/deploy-hf.md` for complete deployment documentation

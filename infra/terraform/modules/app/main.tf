@@ -25,6 +25,20 @@ resource "kubernetes_secret" "mongodb" {
   type = "Opaque"
 }
 
+# Secret for Hugging Face API Token
+resource "kubernetes_secret" "hf_api" {
+  metadata {
+    name      = "hf-api-secret"
+    namespace = kubernetes_namespace.carepath.metadata[0].name
+  }
+
+  data = {
+    HF_API_TOKEN = var.hf_api_token
+  }
+
+  type = "Opaque"
+}
+
 # ConfigMap for shared configuration
 resource "kubernetes_config_map" "app_config" {
   metadata {
@@ -39,6 +53,12 @@ resource "kubernetes_config_map" "app_config" {
     DEFAULT_LLM_MODE    = var.llm_mode
     VECTOR_MODE         = var.vector_mode
     LOG_LEVEL           = var.log_level
+
+    # Hugging Face Inference API settings
+    HF_QWEN_MODEL_ID    = var.hf_qwen_model_id
+    HF_TIMEOUT_SECONDS  = tostring(var.hf_timeout_seconds)
+    HF_MAX_NEW_TOKENS   = tostring(var.hf_max_new_tokens)
+    HF_TEMPERATURE      = tostring(var.hf_temperature)
   }
 }
 
@@ -288,6 +308,57 @@ resource "kubernetes_deployment" "chat_api" {
               config_map_key_ref {
                 name = kubernetes_config_map.app_config.metadata[0].name
                 key  = "LOG_LEVEL"
+              }
+            }
+          }
+
+          # Hugging Face API settings
+          env {
+            name = "HF_API_TOKEN"
+            value_from {
+              secret_key_ref {
+                name = kubernetes_secret.hf_api.metadata[0].name
+                key  = "HF_API_TOKEN"
+              }
+            }
+          }
+
+          env {
+            name = "HF_QWEN_MODEL_ID"
+            value_from {
+              config_map_key_ref {
+                name = kubernetes_config_map.app_config.metadata[0].name
+                key  = "HF_QWEN_MODEL_ID"
+              }
+            }
+          }
+
+          env {
+            name = "HF_TIMEOUT_SECONDS"
+            value_from {
+              config_map_key_ref {
+                name = kubernetes_config_map.app_config.metadata[0].name
+                key  = "HF_TIMEOUT_SECONDS"
+              }
+            }
+          }
+
+          env {
+            name = "HF_MAX_NEW_TOKENS"
+            value_from {
+              config_map_key_ref {
+                name = kubernetes_config_map.app_config.metadata[0].name
+                key  = "HF_MAX_NEW_TOKENS"
+              }
+            }
+          }
+
+          env {
+            name = "HF_TEMPERATURE"
+            value_from {
+              config_map_key_ref {
+                name = kubernetes_config_map.app_config.metadata[0].name
+                key  = "HF_TEMPERATURE"
               }
             }
           }

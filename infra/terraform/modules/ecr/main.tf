@@ -3,6 +3,7 @@
 resource "aws_ecr_repository" "db_api" {
   name                 = "carepath-db-api"
   image_tag_mutability = "MUTABLE"
+  force_delete         = true  # Allow deletion even with images present
 
   image_scanning_configuration {
     scan_on_push = true
@@ -21,6 +22,7 @@ resource "aws_ecr_repository" "db_api" {
 resource "aws_ecr_repository" "chat_api" {
   name                 = "carepath-chat-api"
   image_tag_mutability = "MUTABLE"
+  force_delete         = true  # Allow deletion even with images present
 
   image_scanning_configuration {
     scan_on_push = true

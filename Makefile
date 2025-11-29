@@ -1,6 +1,6 @@
 .PHONY: help install-db-api install-chat run-db-api run-chat load-synthetic generate-synthetic download-llm-model \
 install-chat-llm test-triage docker-build-db-api docker-build-chat docker-push-db-api docker-push-chat ecr-login \
-aws-login tf-login tf-init tf-plan tf-apply tf-destroy deploy-db-api deploy-chat deploy-all mongo-local-start-macos \
+aws-login tf-login tf-init tf-plan tf-apply tf-destroy tf-destroy-nuclear shutdown-nodes shutdown-all shutdown-all-nuclear spinup-all deploy-db-api deploy-chat deploy-all mongo-local-start-macos \
 mongo-local-install-macos k8s-config k8s-status k8s-get-urls k8s-logs k8s-logs-chat k8s-logs-db \
 k8s-logs-chat-errors k8s-logs-db-errors k8s-logs-all-errors k8s-pods-list k8s-scale-up k8s-scale-down \
 k8s-rollback-db-api k8s-rollback-chat k8s-rollback-all k8s-restart-db-api k8s-restart-chat k8s-history \
@@ -38,6 +38,13 @@ help:
 	@echo "  make tf-plan             - Plan Terraform changes"
 	@echo "  make tf-apply            - Apply Terraform changes"
 	@echo "  make tf-destroy          - Destroy Terraform resources"
+	@echo "  make tf-destroy-nuclear  - Destroy resources AND delete state file (cannot undo!)"
+	@echo ""
+	@echo "Shutdown / Cost Savings:"
+	@echo "  make shutdown-nodes         - Scale EKS nodes to 0 (partial savings, keeps infra)"
+	@echo "  make shutdown-all           - Destroy all infrastructure (keeps state, can spinup)"
+	@echo "  make shutdown-all-nuclear   - Destroy everything including state (cannot spinup!)"
+	@echo "  make spinup-all             - Rebuild infrastructure from scratch"
 	@echo ""
 	@echo "Deployment:"
 	@echo "  make deploy-db-api       - Deploy db-api service"
@@ -255,9 +262,203 @@ tf-apply:
 
 tf-destroy:
 	@echo "Destroying Terraform resources..."
+	@export TF_VAR_hf_api_token="$$(grep '^HF_API_TOKEN=' .env 2>/dev/null | cut -d= -f2 || echo 'dummy')" && \
 	cd infra/terraform/envs/demo && \
 	AWS_PROFILE=$(DEPLOY_AWS_PROFILE) AWS_REGION=$(DEPLOY_AWS_REGION) \
 	terraform destroy
+
+tf-destroy-nuclear:
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "☢️  NUCLEAR DESTROY: Destroying infrastructure AND state"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo ""
+	@echo "⚠️  DANGER: This will delete the Terraform state file"
+	@echo "⚠️  You will NOT be able to manage these resources with Terraform again"
+	@echo ""
+	@read -p "Type 'nuclear' to confirm: " confirm; \
+	if [ "$$confirm" != "nuclear" ]; then \
+		echo "Aborted."; \
+		exit 1; \
+	fi
+	@echo ""
+	@echo "Step 1/2: Destroying Terraform resources..."
+	@export TF_VAR_hf_api_token="$$(grep '^HF_API_TOKEN=' .env 2>/dev/null | cut -d= -f2 || echo 'dummy')" && \
+	cd infra/terraform/envs/demo && \
+	AWS_PROFILE=$(DEPLOY_AWS_PROFILE) AWS_REGION=$(DEPLOY_AWS_REGION) \
+	terraform destroy -auto-approve
+	@echo ""
+	@echo "Step 2/2: Deleting Terraform state file..."
+	@aws s3 rm s3://genonaut-terraform-state/carepath/demo/terraform.tfstate --profile $(DEPLOY_AWS_PROFILE) --region us-east-1 2>/dev/null || echo "  (state file already deleted or doesn't exist)"
+	@echo ""
+	@echo "☢️  NUCLEAR DESTROY COMPLETE - State file deleted"
+
+# Shutdown / Cost Savings Commands
+shutdown-nodes: k8s-config
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "⚠️  PARTIAL SHUTDOWN: Scaling EKS node group to 0"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo ""
+	@echo "This will:"
+	@echo "  ✓ Stop all EC2 instances (saves EC2 costs)"
+	@echo "  ✓ Stop all running pods"
+	@echo "  ✗ Keep EKS control plane (still incurs costs)"
+	@echo "  ✗ Keep NAT Gateway (still incurs costs)"
+	@echo "  ✗ Keep Load Balancers (still incurs costs)"
+	@echo ""
+	@echo "To spin back up: Run 'kubectl scale' manually or redeploy"
+	@echo "To save MORE: Use 'make shutdown-all' instead"
+	@echo ""
+	@read -p "Continue? [y/N] " confirm; \
+	if [ "$$confirm" != "y" ] && [ "$$confirm" != "Y" ]; then \
+		echo "Aborted."; \
+		exit 1; \
+	fi
+	@echo ""
+	@echo "Scaling node group to 0..."
+	AWS_PROFILE=$(DEPLOY_AWS_PROFILE) AWS_REGION=$(DEPLOY_AWS_REGION) \
+		aws eks update-nodegroup-config \
+		--cluster-name carepath-demo-cluster \
+		--nodegroup-name carepath-demo-cluster-node-group \
+		--scaling-config minSize=0,maxSize=0,desiredSize=0
+	@echo ""
+	@echo "✅ Node group scaled to 0"
+	@echo "💰 EC2 costs stopped, but EKS/NAT/LB costs remain"
+
+shutdown-all:
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "🛑  FULL SHUTDOWN: Destroying ALL infrastructure"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo ""
+	@echo "This will DESTROY:"
+	@echo "  • EKS cluster and all pods"
+	@echo "  • EC2 instances (node group)"
+	@echo "  • NAT Gateway and Elastic IPs"
+	@echo "  • Load Balancers"
+	@echo "  • VPC, subnets, route tables"
+	@echo "  • Security groups"
+	@echo "  • S3 frontend bucket (will be emptied first)"
+	@echo "  • ECR Docker images (will be deleted)"
+	@echo ""
+	@echo "This will KEEP:"
+	@echo "  ✓ CloudFront distribution"
+	@echo "  ✓ Terraform state (S3 backend)"
+	@echo ""
+	@echo "To spin back up: Run 'make spinup-all' (~10-15 min)"
+	@echo ""
+	@echo "⚠️  WARNING: This cannot be easily undone!"
+	@echo ""
+	@read -p "Type 'destroy' to confirm: " confirm; \
+	if [ "$$confirm" != "destroy" ]; then \
+		echo "Aborted."; \
+		exit 1; \
+	fi
+	@echo ""
+	@echo "Step 1/3: Emptying S3 frontend bucket..."
+	@aws s3 rm s3://carepath-demo-frontend --recursive --profile $(DEPLOY_AWS_PROFILE) --region $(DEPLOY_AWS_REGION) 2>/dev/null || echo "  (bucket already empty or doesn't exist)"
+	@echo ""
+	@echo "Step 2/3: Applying force_delete to ECR repositories..."
+	@export TF_VAR_hf_api_token="$$(grep '^HF_API_TOKEN=' .env 2>/dev/null | cut -d= -f2 || echo 'dummy')" && \
+	cd infra/terraform/envs/demo && \
+	AWS_PROFILE=$(DEPLOY_AWS_PROFILE) AWS_REGION=$(DEPLOY_AWS_REGION) \
+	terraform apply -target=module.ecr.aws_ecr_repository.chat_api -target=module.ecr.aws_ecr_repository.db_api -auto-approve
+	@echo ""
+	@echo "Step 3/3: Running terraform destroy..."
+	@export TF_VAR_hf_api_token="$$(grep '^HF_API_TOKEN=' .env 2>/dev/null | cut -d= -f2 || echo 'dummy')" && \
+	cd infra/terraform/envs/demo && \
+	AWS_PROFILE=$(DEPLOY_AWS_PROFILE) AWS_REGION=$(DEPLOY_AWS_REGION) \
+	terraform destroy -auto-approve
+	@echo ""
+	@echo "✅ All infrastructure destroyed"
+	@echo "💰 Costs reduced to minimal S3 storage fees"
+
+shutdown-all-nuclear:
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "☢️  NUCLEAR SHUTDOWN: Destroying EVERYTHING including state"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo ""
+	@echo "This will DESTROY:"
+	@echo "  • EKS cluster and all pods"
+	@echo "  • EC2 instances (node group)"
+	@echo "  • NAT Gateway and Elastic IPs"
+	@echo "  • Load Balancers"
+	@echo "  • VPC, subnets, route tables"
+	@echo "  • Security groups"
+	@echo "  • S3 frontend bucket"
+	@echo "  • ECR Docker images"
+	@echo "  • Terraform state file (cannot spin back up easily!)"
+	@echo ""
+	@echo "This will KEEP:"
+	@echo "  ✓ CloudFront distribution"
+	@echo "  ✓ Shared Genonaut S3 state bucket (only CarePath state file deleted)"
+	@echo ""
+	@echo "⚠️  DANGER: Without state, you CANNOT use 'make spinup-all'"
+	@echo "⚠️  You would need to re-run 'terraform import' for all resources"
+	@echo "⚠️  Or start completely fresh with new infrastructure"
+	@echo ""
+	@read -p "Type 'nuclear' to confirm PERMANENT deletion: " confirm; \
+	if [ "$$confirm" != "nuclear" ]; then \
+		echo "Aborted."; \
+		exit 1; \
+	fi
+	@echo ""
+	@echo "Step 1/4: Emptying S3 frontend bucket..."
+	@aws s3 rm s3://carepath-demo-frontend --recursive --profile $(DEPLOY_AWS_PROFILE) --region $(DEPLOY_AWS_REGION) 2>/dev/null || echo "  (bucket already empty or doesn't exist)"
+	@echo ""
+	@echo "Step 2/4: Applying force_delete to ECR repositories..."
+	@export TF_VAR_hf_api_token="$$(grep '^HF_API_TOKEN=' .env 2>/dev/null | cut -d= -f2 || echo 'dummy')" && \
+	cd infra/terraform/envs/demo && \
+	AWS_PROFILE=$(DEPLOY_AWS_PROFILE) AWS_REGION=$(DEPLOY_AWS_REGION) \
+	terraform apply -target=module.ecr.aws_ecr_repository.chat_api -target=module.ecr.aws_ecr_repository.db_api -auto-approve
+	@echo ""
+	@echo "Step 3/4: Running terraform destroy..."
+	@export TF_VAR_hf_api_token="$$(grep '^HF_API_TOKEN=' .env 2>/dev/null | cut -d= -f2 || echo 'dummy')" && \
+	cd infra/terraform/envs/demo && \
+	AWS_PROFILE=$(DEPLOY_AWS_PROFILE) AWS_REGION=$(DEPLOY_AWS_REGION) \
+	terraform destroy -auto-approve
+	@echo ""
+	@echo "Step 4/4: Deleting Terraform state file from S3..."
+	@aws s3 rm s3://genonaut-terraform-state/carepath/demo/terraform.tfstate --profile $(DEPLOY_AWS_PROFILE) --region us-east-1 2>/dev/null || echo "  (state file already deleted or doesn't exist)"
+	@echo ""
+	@echo "☢️  NUCLEAR SHUTDOWN COMPLETE"
+	@echo "💰 Costs reduced to near-zero (only CloudFront if still active)"
+	@echo ""
+	@echo "⚠️  State destroyed - cannot easily spin back up"
+
+spinup-all:
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "🚀  SPIN UP: Rebuilding infrastructure"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo ""
+	@echo "This will create:"
+	@echo "  • EKS cluster (~10 min)"
+	@echo "  • EC2 instances (node group)"
+	@echo "  • NAT Gateway and networking"
+	@echo "  • Load Balancers"
+	@echo "  • Deploy db-api and chat-api pods"
+	@echo ""
+	@echo "Estimated time: 10-15 minutes"
+	@echo ""
+	@read -p "Continue? [y/N] " confirm; \
+	if [ "$$confirm" != "y" ] && [ "$$confirm" != "Y" ]; then \
+		echo "Aborted."; \
+		exit 1; \
+	fi
+	@echo ""
+	@echo "Step 1/3: Terraform apply..."
+	@$(MAKE) tf-apply
+	@echo ""
+	@echo "Step 2/3: Configure kubectl..."
+	@$(MAKE) k8s-config
+	@echo ""
+	@echo "Step 3/3: Checking deployment status..."
+	@$(MAKE) k8s-status
+	@echo ""
+	@echo "✅ Infrastructure rebuilt successfully"
+	@echo ""
+	@echo "Next steps:"
+	@echo "  1. Check service URLs: make k8s-get-urls"
+	@echo "  2. View logs: make k8s-logs-chat"
+	@echo "  3. Test endpoints: make test-triage-cloud"
 
 # Deployment targets
 deploy-db-api: docker-build-db-api docker-push-db-api
